@@ -24,6 +24,22 @@ const mockSuccessUpdateUser = {
   },
 };
 
+const mockDelayedUpdateSuccess = () => {
+  return jest.fn().mockImplementation(() => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(mockSuccessUpdateUser);
+      }, 300);
+    });
+  });
+};
+
+const mockFailUpdateUser = {
+  response: {
+    data: {},
+  },
+};
+
 const mockFailGetUser = {
   data: {
     message: "User not found",
@@ -211,6 +227,55 @@ describe("UserPage", () => {
         const originalDisplayText = queryByText("display1@user1");
         expect(originalDisplayText).toBeInTheDocument();
       }, 1500);
+    });
+
+    it("display spinner when there is updateUser api call", async () => {
+      const { queryByText } = await setupForEdit();
+      apiCalls.updateUser = mockDelayedUpdateSuccess();
+
+      const saveButton = queryByText("Save");
+      fireEvent.click(saveButton);
+
+      const spinner = queryByText("Loading...");
+      expect(spinner).toBeInTheDocument();
+    });
+
+    it("disables save button when there is updateUser api call", async () => {
+      const { queryByText } = await setupForEdit();
+      apiCalls.updateUser = mockDelayedUpdateSuccess();
+
+      const saveButton = queryByText("Save");
+      fireEvent.click(saveButton);
+
+      setTimeout(() => {
+        expect(saveButton).toBeDisabled();
+      }, 1500);
+    });
+
+    it("disables cancel button when there is updateUser api call", async () => {
+      const { queryByText } = await setupForEdit();
+      apiCalls.updateUser = mockDelayedUpdateSuccess();
+
+      const saveButton = queryByText("Save");
+      fireEvent.click(saveButton);
+
+      const cancelButton = queryByText("Cancel");
+      expect(cancelButton).toBeDisabled();
+    });
+
+
+    it("enable save button after updateUser api call fails", async () => {
+      const { queryByText, container } = await setupForEdit();
+      let displayInput = container.querySelector("input")
+      fireEvent.change(displayInput, { target: { value: "display1-update" } });
+      apiCalls.updateUser = jest.fn().mockRejectedValue(mockFailUpdateUser);
+
+      const saveButton = queryByText("Save").closest("button")
+      fireEvent.click(saveButton)
+
+      await waitFor(() => {
+        expect(saveButton).not.toBeDisabled();
+      });
     });
   });
 });

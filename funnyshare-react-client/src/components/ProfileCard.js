@@ -1,6 +1,7 @@
 import React from "react";
 import ProfileImageWithDefault from "./ProfileImageWithDefault";
 import Input from "./Input";
+import ButtonWithProgress from "./ButtonWithProgress";
 
 function ProfileCard(props) {
   const { displayName, username, image } = props.user;
@@ -38,14 +39,23 @@ function ProfileCard(props) {
           </button>
         )}
         {props.inEditMode && (
-          <div>
-            <button onClick={props.onClickSave} className="btn btn-primary">
-              <i className="fas fa-save"></i> Save
-            </button>
+          <div className="btn-group">
+            <ButtonWithProgress
+              className="btn btn-primary"
+              onClick={props.onClickSave}
+              text={
+                <span>
+                  <i className="fas fa-save"></i> Save
+                </span>
+              }
+              pendingApiCall={props.pendingUpdateCall}
+              disabled={props.pendingUpdateCall}
+            />
 
             <button
               onClick={props.onClickCancel}
               className="btn btn-outline-secondary ms-1"
+              disabled={props.pendingUpdateCall}
             >
               <i className="fas fa-window-close"></i> Cancel
             </button>
