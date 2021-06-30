@@ -72,6 +72,7 @@ class UserPage extends Component {
       .then((response) => {
         this.setState({
           inEditMode: false,
+          originalDisplayName: undefined,
         });
       })
       .catch((error) => {});
@@ -84,7 +85,7 @@ class UserPage extends Component {
       originalDisplayName = user.displayName;
     }
     user.displayName = event.target.value;
-    this.setState({ user, originalDisplayName: originalDisplayName });
+    this.setState({ user, originalDisplayName });
   };
 
   render() {

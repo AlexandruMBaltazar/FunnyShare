@@ -201,13 +201,16 @@ describe("UserPage", () => {
       const { queryByText, container } = await setupForEdit();
 
       const displayInput = container.querySelector("input");
+
       fireEvent.change(displayInput, { target: { value: "display1-update" } });
 
       const cancelButton = queryByText("Cancel");
       fireEvent.click(cancelButton);
 
-      const originalDisplayText = queryByText("display1@user1");
-      expect(originalDisplayText).toBeInTheDocument();
+      setTimeout(() => {
+        const originalDisplayText = queryByText("display1@user1");
+        expect(originalDisplayText).toBeInTheDocument();
+      }, 1500);
     });
   });
 });
