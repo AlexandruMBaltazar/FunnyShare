@@ -10,6 +10,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class UserService {
 
@@ -48,7 +50,12 @@ public class UserService {
 
     public User update(long id, UserUpdateVM userUpdate) {
         User userInDB = userRepository.getOne(id);
+
         userInDB.setDisplayName(userUpdate.getDisplayName());
+
+        String savedImageName = userInDB.getUsername() + UUID.randomUUID().toString().replaceAll("-", "");
+        userInDB.setImage(savedImageName);
+
         return userRepository.save(userInDB);
     }
 }
