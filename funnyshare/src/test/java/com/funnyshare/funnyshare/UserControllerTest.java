@@ -51,6 +51,7 @@ public class UserControllerTest {
     @BeforeEach
     public void cleanup() {
         userRepository.deleteAll();
+        testRestTemplate.getRestTemplate().getInterceptors().clear();
     }
 
     @Test
