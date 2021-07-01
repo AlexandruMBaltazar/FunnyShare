@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -11,17 +12,23 @@ import java.io.File;
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
 
-    @Value("${uploadpath}")
-    String uploadPath;
+    @Autowired
+    AppConfiguration appConfiguration;
 
     @Bean
     CommandLineRunner createUploadFolder() {
         return (args) -> {
-            File uploadFolder = new File(uploadPath);
-            boolean uploadFolderExists = uploadFolder.exists() && uploadFolder.isDirectory();
-            if (!uploadFolderExists) {
-                uploadFolder.mkdir();
-            }
+            createNonExistingFolder(appConfiguration.getUploadPath());
+            createNonExistingFolder(appConfiguration.getFullProfileImagesPath());
+            createNonExistingFolder(appConfiguration.getFullAttachmentsPath());
         };
+    }
+
+    private void createNonExistingFolder(String path) {
+        File folder = new File(path);
+        boolean folderExists = folder.exists() && folder.isDirectory();
+        if (!folderExists) {
+            folder.mkdir();
+        }
     }
 }

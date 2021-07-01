@@ -1,11 +1,18 @@
 spring:
-  datasource:
-    generate-unique-name: false
+#  datasource:
+#    driverClassName: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/funnyshare?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false&allowPublicKeyRetrieval=true
+#    username: "root"
+#    password: "root"
+#    generate-unique-name: false
   h2:
     console:
       enabled: true
       path: /h2-console
   jpa:
+#    hibernate.ddl-auto: update
+#    generate-ddl: true
+#    show-sql: true
     properties:
       javax:
         persistence:
@@ -16,5 +23,5 @@ spring:
       pageable:
         default-page-size: 10
         max-page-size: 100
-
-uploadpath: uploads-test
+funnyshare:
+  upload-path: uploads-test
