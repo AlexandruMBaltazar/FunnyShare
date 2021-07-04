@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare;
 
+import com.funnyshare.funnyshare.configuration.AppConfiguration;
 import com.funnyshare.funnyshare.error.ApiError;
 import com.funnyshare.funnyshare.shared.GenericResponse;
 import com.funnyshare.funnyshare.user.User;
@@ -8,6 +9,7 @@ import com.funnyshare.funnyshare.user.UserService;
 import com.funnyshare.funnyshare.user.vm.UserUpdateVM;
 import com.funnyshare.funnyshare.user.vm.UserVM;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
@@ -25,6 +27,7 @@ import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
@@ -47,6 +50,9 @@ public class UserControllerTest {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    AppConfiguration appConfiguration;
 
     @BeforeEach
     public void cleanup() {
@@ -449,13 +455,9 @@ public class UserControllerTest {
         User user = userService.save(TestUtil.createValidUser("user1"));
         authenticate(user.getUsername());
 
-        // Convert the image into Base64 to get the image string
-        ClassPathResource imageResource = new ClassPathResource("profile.png");
-        byte[] imageArr = FileUtils.readFileToByteArray(imageResource.getFile());
-        String imageString = Base64.getEncoder().encodeToString(imageArr);
+        String imageString = readFileToBase64("profile.png");
 
-
-        UserUpdateVM updatedUser = new UserUpdateVM();
+        UserUpdateVM updatedUser = createValidUserUpdateVM();
         updatedUser.setDisplayName("newDisplayName");
         updatedUser.setImage(imageString);
 
@@ -463,6 +465,43 @@ public class UserControllerTest {
         ResponseEntity<UserVM> responseEntity = putUser(user.getId(), requestEntity, UserVM.class);
 
         assertThat(responseEntity.getBody().getImage()).isNotEqualTo("profile-image.png");
+    }
+
+    @Test
+    public void putUser_withValidRequestBodyWithSupportedImageFromAuthorizedUser_imageIsStoredUnderProfileFolder() throws IOException {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        authenticate(user.getUsername());
+
+        String imageString = readFileToBase64("profile.png");
+
+        UserUpdateVM updatedUser = createValidUserUpdateVM();
+        updatedUser.setDisplayName("newDisplayName");
+        updatedUser.setImage(imageString);
+
+        HttpEntity<UserUpdateVM> requestEntity = new HttpEntity<UserUpdateVM>(updatedUser);
+        ResponseEntity<UserVM> responseEntity = putUser(user.getId(), requestEntity, UserVM.class);
+
+        String storedImageName = responseEntity.getBody().getImage();
+
+        String profilePicturePath = appConfiguration.getFullProfileImagesPath() + "/" + storedImageName;
+
+        File storedImage = new File(profilePicturePath);
+
+        assertThat(storedImage.exists()).isTrue();
+    }
+
+    private String readFileToBase64(String fileName) throws IOException {
+        // Convert the image into Base64 to get the image string
+        ClassPathResource imageResource = new ClassPathResource(fileName);
+        byte[] imageArr = FileUtils.readFileToByteArray(imageResource.getFile());
+
+        return Base64.getEncoder().encodeToString(imageArr);
+    }
+
+    private UserUpdateVM createValidUserUpdateVM() {
+        UserUpdateVM updatedUser = new UserUpdateVM();
+        updatedUser.setDisplayName("newDisplayName");
+        return updatedUser;
     }
 
     public void authenticate(String username) {
@@ -501,4 +540,9 @@ public class UserControllerTest {
         return testRestTemplate.exchange(path, HttpMethod.PUT, requestEntity, response);
     }
 
+    @AfterEach
+    public void cleanDirectory() throws IOException {
+        FileUtils.cleanDirectory(new File(appConfiguration.getFullProfileImagesPath()));
+        FileUtils.cleanDirectory(new File(appConfiguration.getFullAttachmentsPath()));
+    }
 }

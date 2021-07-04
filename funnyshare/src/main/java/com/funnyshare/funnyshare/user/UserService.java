@@ -1,15 +1,15 @@
 package com.funnyshare.funnyshare.user;
 
 import com.funnyshare.funnyshare.error.NotFoundException;
+import com.funnyshare.funnyshare.file.FileService;
 import com.funnyshare.funnyshare.user.vm.UserUpdateVM;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.UUID;
 
 @Service
@@ -17,11 +17,13 @@ public class UserService {
 
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
+    private FileService fileService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, FileService fileService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.fileService = fileService;
     }
 
     public User save(User user) {
@@ -53,8 +55,16 @@ public class UserService {
 
         userInDB.setDisplayName(userUpdate.getDisplayName());
 
-        String savedImageName = userInDB.getUsername() + UUID.randomUUID().toString().replaceAll("-", "");
-        userInDB.setImage(savedImageName);
+        if (userUpdate.getImage() != null) {
+            String savedImageName = null;
+            try {
+                savedImageName = fileService.saveProfileImage(userUpdate.getImage());
+                userInDB.setImage(savedImageName);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         return userRepository.save(userInDB);
     }
