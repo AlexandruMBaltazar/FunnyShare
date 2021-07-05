@@ -263,19 +263,25 @@ describe("UserPage", () => {
       expect(cancelButton).toBeDisabled();
     });
 
+    it("dispalys the selected image in edit mode", async () => {
+      const { container } = await setupForEdit();
 
-    it("enable save button after updateUser api call fails", async () => {
-      const { queryByText, container } = await setupForEdit();
-      let displayInput = container.querySelector("input")
-      fireEvent.change(displayInput, { target: { value: "display1-update" } });
-      apiCalls.updateUser = jest.fn().mockRejectedValue(mockFailUpdateUser);
+      const inputs = container.querySelectorAll("input");
+      const uploadInput = inputs[1];
 
-      const saveButton = queryByText("Save").closest("button")
-      fireEvent.click(saveButton)
+      const file = new File(["dummy contents"], "example.png", {
+        type: "img/png",
+      });
+
+      fireEvent.change(uploadInput, { target: { files: [file] } });
 
       await waitFor(() => {
-        expect(saveButton).not.toBeDisabled();
+        expect(container.querySelector("img").src).toContain(
+          "data:img/png;base64,ZHVtbXkgY29udGVudHM="
+        );
       });
     });
   });
 });
+
+console.error = () => {};

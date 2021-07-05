@@ -16,6 +16,7 @@ function ProfileCard(props) {
           width="200"
           height="200"
           image={image}
+          src={props.loadedImage}
           className="rounded-circle shadow"
         />
       </div>
@@ -28,6 +29,12 @@ function ProfileCard(props) {
               label={`Change Display Name for ${username}`}
               onChange={props.onChangeDisplayName}
             />
+            <input
+              className="form-control mt-2"
+              type="file"
+              id="formFile"
+              onChange={props.onFileSelect}
+            />
           </div>
         )}
         {showEditButton && (
@@ -39,7 +46,7 @@ function ProfileCard(props) {
           </button>
         )}
         {props.inEditMode && (
-          <div className="btn-group">
+          <div className="btn-group mt-2 text-center">
             <ButtonWithProgress
               className="btn btn-primary"
               onClick={props.onClickSave}
