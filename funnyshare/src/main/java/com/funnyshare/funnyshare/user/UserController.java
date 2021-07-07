@@ -52,7 +52,7 @@ public class UserController {
 
     @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("#id == principal.id")
-    public UserVM updateUser(@PathVariable long id, @RequestBody(required = false) UserUpdateVM userUpdate) {
+    public UserVM updateUser(@PathVariable long id, @Valid @RequestBody(required = false) UserUpdateVM userUpdate) {
         User updatedUser = userService.update(id, userUpdate);
         return new UserVM(updatedUser);
     }
