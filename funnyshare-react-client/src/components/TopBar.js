@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import logo from "../assets/funnyshare-logo.png";
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
+import ProfileImageWithDefault from "./ProfileImageWithDefault";
 
 class TopBar extends Component {
   onClickLogout = () => {
@@ -31,6 +32,15 @@ class TopBar extends Component {
     if (this.props.user.isLoggedIn) {
       links = (
         <ul className="nav navbar-nav ms-auto">
+          <li className="nav-item nav-link">
+            <ProfileImageWithDefault
+              className="rounded-circle me-1"
+              width="32"
+              height="32"
+              image={this.props.user.image}
+            />
+            {this.props.user.displayName}
+          </li>
           <li
             className="nav-item nav-link"
             onClick={this.onClickLogout}
