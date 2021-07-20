@@ -1,5 +1,10 @@
 import React from "react";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import UserPage from "./UserPage";
 import * as apiCalls from "../api/apiCalls";
 import { Provider } from "react-redux";
@@ -57,8 +62,9 @@ const match = {
   },
 };
 
+let store;
 const setup = (props) => {
-  const store = configureStore(false);
+  store = configureStore(false);
   return render(
     <Provider store={store}>
       <UserPage {...props} />
@@ -313,6 +319,40 @@ describe("UserPage", () => {
           queryByText("Only PNG and JPG files are allowed")
         ).toBeInTheDocument();
       });
+    });
+
+    it("updates redux state after updateUser api call success", async () => {
+      const { queryByText, container } = await setupForEdit();
+      let displayInput = container.querySelector("input");
+      fireEvent.change(displayInput, { target: { value: "display1-update" } });
+      apiCalls.updateUser = jest.fn().mockResolvedValue(mockSuccessUpdateUser);
+
+      const saveButton = queryByText("Save");
+      fireEvent.click(saveButton);
+      await waitForElementToBeRemoved(saveButton);
+      const storedUserData = store.getState();
+      expect(storedUserData.displayName).toBe(
+        mockSuccessUpdateUser.data.displayName
+      );
+      expect(storedUserData.image).toBe(mockSuccessUpdateUser.data.image);
+    });
+
+    it("updates localStorage after updateUser api call success", async () => {
+      const { queryByRole, container } = await setupForEdit();
+      let displayInput = container.querySelector("input");
+      fireEvent.change(displayInput, { target: { value: "display1-update" } });
+      apiCalls.updateUser = jest.fn().mockResolvedValue(mockSuccessUpdateUser);
+
+      const saveButton = queryByRole("button", { name: "Save" });
+      fireEvent.click(saveButton);
+      await waitForElementToBeRemoved(saveButton);
+      const storedUserData = JSON.parse(
+        localStorage.getItem("funnyshare-auth")
+      );
+      expect(storedUserData.displayName).toBe(
+        mockSuccessUpdateUser.data.displayName
+      );
+      expect(storedUserData.image).toBe(mockSuccessUpdateUser.data.image);
     });
   });
 });
