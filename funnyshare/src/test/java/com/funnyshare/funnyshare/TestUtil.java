@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare;
 
+import com.funnyshare.funnyshare.post.Post;
 import com.funnyshare.funnyshare.user.User;
 
 public class TestUtil {
@@ -22,5 +23,11 @@ public class TestUtil {
         user.setPassword("P4ssword");
         user.setImage("profile-image.png");
         return user;
+    }
+
+    public static Post createValidPost() {
+        Post post = new Post();
+        post.setContent("test content for test post");
+        return post;
     }
 }
