@@ -2,6 +2,7 @@ package com.funnyshare.funnyshare;
 
 import com.funnyshare.funnyshare.error.ApiError;
 import com.funnyshare.funnyshare.post.Post;
+import com.funnyshare.funnyshare.post.PostRepository;
 import com.funnyshare.funnyshare.user.UserRepository;
 import com.funnyshare.funnyshare.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,8 +32,12 @@ public class PostControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    PostRepository postRepository;
+
     @BeforeEach
     public void cleanup() {
+        postRepository.deleteAll();
         userRepository.deleteAll();
         testRestTemplate.getRestTemplate().getInterceptors().clear();
     }
@@ -59,6 +64,30 @@ public class PostControllerTest {
         Post post = TestUtil.createValidPost();
         ResponseEntity<ApiError> response = postPost(post, ApiError.class);
         assertThat(response.getBody().getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    public void postHoax_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabase() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = TestUtil.createValidPost();
+
+        postPost(post, Object.class);
+
+        assertThat(postRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    public void postHoax_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabaseWithTimestamp() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = TestUtil.createValidPost();
+
+        postPost(post, Object.class);
+
+        Post inDB = postRepository.findAll().get(0);
+
+        assertThat(inDB.getTimestamp()).isNotNull();
     }
 
     private <T> ResponseEntity<T> postPost(Post post, Class<T> responseType) {
