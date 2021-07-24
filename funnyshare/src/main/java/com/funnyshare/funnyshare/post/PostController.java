@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/1.0/posts")
 public class PostController {
@@ -18,7 +20,7 @@ public class PostController {
     }
 
     @PostMapping
-    public void createPost(@RequestBody Post post) {
+    public void createPost(@RequestBody @Valid Post post) {
         postService.save(post);
     }
 }

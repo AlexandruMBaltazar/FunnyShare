@@ -14,6 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import static org.assertj.core.api.Assertions.*;
 
 
@@ -43,7 +48,7 @@ public class PostControllerTest {
     }
 
     @Test
-    public void postHoax_whenPostIsValidAndUserIsAuthorized_receiveOk() {
+    public void postPost_whenPostIsValidAndUserIsAuthorized_receiveOk() {
         userService.save(TestUtil.createValidUser("user1"));
         authenticate("user1");
         Post post = TestUtil.createValidPost();
@@ -53,21 +58,21 @@ public class PostControllerTest {
     }
 
     @Test
-    public void postHoax_whenPostIsValidAndUserIsUnauthorized_receiveUnauthorized() {
+    public void postPost_whenPostIsValidAndUserIsUnauthorized_receiveUnauthorized() {
         Post post = TestUtil.createValidPost();
         ResponseEntity<Object> response = postPost(post, Object.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    public void postHoax_whenPostIsValidAndUserIsUnauthorized_receiveApiError() {
+    public void postPost_whenPostIsValidAndUserIsUnauthorized_receiveApiError() {
         Post post = TestUtil.createValidPost();
         ResponseEntity<ApiError> response = postPost(post, ApiError.class);
         assertThat(response.getBody().getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
-    public void postHoax_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabase() {
+    public void postPost_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabase() {
         userService.save(TestUtil.createValidUser("user1"));
         authenticate("user1");
         Post post = TestUtil.createValidPost();
@@ -78,7 +83,7 @@ public class PostControllerTest {
     }
 
     @Test
-    public void postHoax_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabaseWithTimestamp() {
+    public void postPost_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabaseWithTimestamp() {
         userService.save(TestUtil.createValidUser("user1"));
         authenticate("user1");
         Post post = TestUtil.createValidPost();
@@ -88,6 +93,71 @@ public class PostControllerTest {
         Post inDB = postRepository.findAll().get(0);
 
         assertThat(inDB.getTimestamp()).isNotNull();
+    }
+
+    @Test
+    public void postPost_whenPostContentNullAndUserIsAuthorized_receiveBadRequest() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = new Post();
+
+        ResponseEntity<Object> response = postPost(post, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void postPost_whenPostContentLessThan10CharactersAndUserIsAuthorized_receiveBadRequest() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = new Post();
+        post.setContent("123456789");
+
+        ResponseEntity<Object> response = postPost(post, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void postPost_whenPostContentIs5000CharactersAndUserIsAuthorized_receiveOk() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = new Post();
+
+        String content = IntStream.rangeClosed(1, 5000)
+                .mapToObj(i -> "x")
+                .collect(Collectors.joining());
+
+        post.setContent(content);
+
+        ResponseEntity<Object> response = postPost(post, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void postPost_whenPostContentMoreThan5000CharactersAndUserIsAuthorized_receiveBadRequest() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = new Post();
+
+        String content = IntStream.rangeClosed(1, 5001)
+                .mapToObj(i -> "x")
+                .collect(Collectors.joining());
+
+        post.setContent(content);
+
+        ResponseEntity<Object> response = postPost(post, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void postPost_whenPostContentNullAndUserIsAuthorized_receiveApiErrorWithValidationErrors() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = new Post();
+
+        ResponseEntity<ApiError> response = postPost(post, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+
+        assertThat(validationErrors.get("content")).isNotNull();
     }
 
     private <T> ResponseEntity<T> postPost(Post post, Class<T> responseType) {
