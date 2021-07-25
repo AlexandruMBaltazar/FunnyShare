@@ -15,7 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.transaction.TestTransaction;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
+import javax.transaction.Transactional;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -40,6 +45,9 @@ public class PostControllerTest {
 
     @Autowired
     PostRepository postRepository;
+
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
     public void cleanup() {
@@ -176,15 +184,16 @@ public class PostControllerTest {
 
     @Test
     public void postPost_whenPostIsValidAndUserIsAuthorized_getPostFromUser() {
-        userService.save(TestUtil.createValidUser("user1"));
+        User user = userService.save(TestUtil.createValidUser("user1"));
         authenticate("user1");
         Post post = TestUtil.createValidPost();
 
         postPost(post, Object.class);
 
-        User user = userRepository.findByUsername("user1");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        assertThat(user.getPosts().size()).isEqualTo(1);
+        User inDBUser = entityManager.find(User.class, user.getId());
+        assertThat(inDBUser.getPosts().size()).isEqualTo(1);
     }
 
 
