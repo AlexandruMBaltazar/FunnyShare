@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare.post;
 
+import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,8 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
-    public void save(Post post) {
+    public void save(User user, Post post) {
+        post.setUser(user);
         post.setTimestamp(new Date());
         postRepository.save(post);
     }

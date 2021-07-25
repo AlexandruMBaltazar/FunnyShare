@@ -2,6 +2,7 @@ package com.funnyshare.funnyshare.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.funnyshare.funnyshare.post.Post;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -13,6 +14,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.util.Collection;
+import java.util.List;
 
 
 @Data
@@ -38,6 +40,9 @@ public class User implements UserDetails {
     private String password;
 
     private String image;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    private List<Post> posts;
 
     @Override
     @JsonIgnore

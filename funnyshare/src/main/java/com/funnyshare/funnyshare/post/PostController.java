@@ -1,5 +1,7 @@
 package com.funnyshare.funnyshare.post;
 
+import com.funnyshare.funnyshare.shared.CurrentUser;
+import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +22,7 @@ public class PostController {
     }
 
     @PostMapping
-    public void createPost(@RequestBody @Valid Post post) {
-        postService.save(post);
+    public void createPost(@RequestBody @Valid Post post, @CurrentUser User user) {
+        postService.save(user, post);
     }
 }

@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare.post;
 
+import com.funnyshare.funnyshare.user.User;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -22,4 +23,7 @@ public class Post {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
+
+    @ManyToOne
+    private User user;
 }

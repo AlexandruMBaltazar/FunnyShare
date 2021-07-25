@@ -3,6 +3,7 @@ package com.funnyshare.funnyshare;
 import com.funnyshare.funnyshare.error.ApiError;
 import com.funnyshare.funnyshare.post.Post;
 import com.funnyshare.funnyshare.post.PostRepository;
+import com.funnyshare.funnyshare.user.User;
 import com.funnyshare.funnyshare.user.UserRepository;
 import com.funnyshare.funnyshare.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +73,7 @@ public class PostControllerTest {
     }
 
     @Test
-    public void postPost_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabase() {
+    public void postPost_whenPostIsValidAndUserIsAuthorized_postSavedToDatabase() {
         userService.save(TestUtil.createValidUser("user1"));
         authenticate("user1");
         Post post = TestUtil.createValidPost();
@@ -83,7 +84,7 @@ public class PostControllerTest {
     }
 
     @Test
-    public void postPost_whenPostIsValidAndUserIsAuthorized_hoaxSavedToDatabaseWithTimestamp() {
+    public void postPost_whenPostIsValidAndUserIsAuthorized_postSavedToDatabaseWithTimestamp() {
         userService.save(TestUtil.createValidUser("user1"));
         authenticate("user1");
         Post post = TestUtil.createValidPost();
@@ -159,6 +160,33 @@ public class PostControllerTest {
 
         assertThat(validationErrors.get("content")).isNotNull();
     }
+
+    @Test
+    public void postPost_whenPostIsValidAndUserIsAuthorized_postSavedToDatabaseWithAuthUserInfo() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = TestUtil.createValidPost();
+
+        postPost(post, Object.class);
+
+        Post inDB = postRepository.findAll().get(0);
+
+        assertThat(inDB.getUser().getUsername()).isEqualTo("user1");
+    }
+
+    @Test
+    public void postPost_whenPostIsValidAndUserIsAuthorized_getPostFromUser() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = TestUtil.createValidPost();
+
+        postPost(post, Object.class);
+
+        User user = userRepository.findByUsername("user1");
+
+        assertThat(user.getPosts().size()).isEqualTo(1);
+    }
+
 
     private <T> ResponseEntity<T> postPost(Post post, Class<T> responseType) {
         return testRestTemplate.postForEntity(API_1_0_POSTS, post, responseType);
