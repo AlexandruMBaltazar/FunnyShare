@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import ProfileImageWithDefault from "./ProfileImageWithDefault";
+import { connect } from "react-redux";
 
 class PostSubmit extends Component {
   render() {
@@ -9,6 +10,7 @@ class PostSubmit extends Component {
           className="rounded-circle m-1"
           width="32"
           height="32"
+          image={this.props.loggedInUser.image}
         />
 
         <div className="flex-fill">
@@ -19,4 +21,10 @@ class PostSubmit extends Component {
   }
 }
 
-export default PostSubmit;
+const mapStateToProps = (state) => {
+  return {
+    loggedInUser: state,
+  };
+};
+
+export default connect(mapStateToProps)(PostSubmit);
