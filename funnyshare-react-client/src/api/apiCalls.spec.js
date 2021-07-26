@@ -66,4 +66,16 @@ describe("apiCalls", () => {
       expect(path).toBe("/api/1.0/users/5");
     });
   });
+
+  describe("postPosts", () => {
+    it("calls /api/1.0/posts", () => {
+      const mockPostPost = jest.fn();
+      axios.post = mockPostPost;
+
+      apiCalls.postPost();
+
+      const path = mockPostPost.mock.calls[0][0];
+      expect(path).toBe("/api/1.0/posts");
+    });
+  });
 });
