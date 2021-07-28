@@ -1,5 +1,10 @@
 import React from "react";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import PostSubmit from "./PostSubmit";
 import { Provider } from "react-redux";
 import { createStore } from "redux";
@@ -170,5 +175,164 @@ describe("PostSubmit", () => {
 
       expect(queryByText("Test post content")).not.toBeInTheDocument();
     });
+
+    it("disables Post button when there is postPost api call", async () => {
+      const { queryByText, container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+      fireEvent.change(textArea, { target: { value: "Test hoax content" } });
+
+      const postButton = queryByText("Post");
+
+      const mockFunction = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({});
+          }, 300);
+        });
+      });
+
+      apiCalls.postPost = mockFunction;
+      fireEvent.click(postButton);
+
+      fireEvent.click(postButton);
+      expect(mockFunction).toHaveBeenCalledTimes(1);
+    });
+
+    it("disables Cancel button when there is postPost api call", async () => {
+      const { queryByText, container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+      fireEvent.change(textArea, { target: { value: "Test hoax content" } });
+
+      const postButton = queryByText("Post");
+      const cancelButton = queryByText("Cancel");
+
+      const mockFunction = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({});
+          }, 300);
+        });
+      });
+
+      apiCalls.postPost = mockFunction;
+      fireEvent.click(postButton);
+
+      expect(cancelButton).toBeDisabled();
+    });
+
+    it("display spinner when there is postPost api call", async () => {
+      const { queryByText, container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+      fireEvent.change(textArea, { target: { value: "Test hoax content" } });
+
+      const postButton = queryByText("Post");
+
+      const mockFunction = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({});
+          }, 300);
+        });
+      });
+
+      apiCalls.postPost = mockFunction;
+      fireEvent.click(postButton);
+
+      expect(queryByText("Loading...")).toBeInTheDocument();
+    });
+
+    it("enables Post button when postPost api calls fails", async () => {
+      const { queryByText, container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+      fireEvent.change(textArea, { target: { value: "Test hoax content" } });
+
+      const postButton = queryByText("Post");
+
+      const mockFunction = jest.fn().mockRejectedValueOnce({
+        response: {
+          data: {
+            validationErrors: {
+              content: "It must have minimum 10 and maximum 5000 characters",
+            },
+          },
+        },
+      });
+
+      apiCalls.postPost = mockFunction;
+      fireEvent.click(postButton);
+
+      await waitFor(() => {
+        expect(queryByText("Post")).not.toBeDisabled();
+      });
+    });
+
+    it("displays validation error for content", async () => {
+      const { queryByText, container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+      fireEvent.change(textArea, { target: { value: "Test hoax content" } });
+
+      const postButton = queryByText("Post");
+
+      const mockFunction = jest.fn().mockRejectedValueOnce({
+        response: {
+          data: {
+            validationErrors: {
+              content: "It must have minimum 10 and maximum 5000 characters",
+            },
+          },
+        },
+      });
+
+      apiCalls.postPost = mockFunction;
+      fireEvent.click(postButton);
+
+      await waitFor(() => {
+        expect(
+          queryByText("It must have minimum 10 and maximum 5000 characters")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("clears validation error after clicking cancel", async () => {
+      const { queryByText, container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+      fireEvent.change(textArea, { target: { value: "Test hoax content" } });
+
+      const postButton = queryByText("Post");
+      const cancelButton = queryByText("Cancel");
+
+      const mockFunction = jest.fn().mockRejectedValueOnce({
+        response: {
+          data: {
+            validationErrors: {
+              content: "It must have minimum 10 and maximum 5000 characters",
+            },
+          },
+        },
+      });
+
+      apiCalls.postPost = mockFunction;
+      fireEvent.click(postButton);
+
+      await waitFor(() => {
+        expect(
+          queryByText("It must have minimum 10 and maximum 5000 characters")
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.click(cancelButton);
+
+      expect(
+        queryByText("It must have minimum 10 and maximum 5000 characters")
+      ).not.toBeInTheDocument();
+    });
   });
 });
+
+console.error = () => {};
