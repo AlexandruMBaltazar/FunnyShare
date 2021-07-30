@@ -4,6 +4,7 @@ import com.funnyshare.funnyshare.error.ApiError;
 import com.funnyshare.funnyshare.post.Post;
 import com.funnyshare.funnyshare.post.PostRepository;
 import com.funnyshare.funnyshare.post.PostService;
+import com.funnyshare.funnyshare.post.vm.PostVM;
 import com.funnyshare.funnyshare.user.User;
 import com.funnyshare.funnyshare.user.UserRepository;
 import com.funnyshare.funnyshare.user.UserService;
@@ -203,6 +204,16 @@ public class PostControllerTest {
     }
 
     @Test
+    public void postPost_whenPostIsValidAndUserIsAuthorized_receivePostVM() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = TestUtil.createValidPost();
+
+        ResponseEntity<PostVM> response = postPost(post, PostVM.class);
+        assertThat(response.getBody().getUser().getUsername()).isEqualTo("user1");
+    }
+
+    @Test
     public void getPosts_whenThereAreNoPosts_receiveOk() {
         ResponseEntity<Object> response = getPosts(new ParameterizedTypeReference<Object>() {});
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -222,6 +233,17 @@ public class PostControllerTest {
 
         ResponseEntity<TestPage<Object>> response = getPosts(new ParameterizedTypeReference<TestPage<Object>>() {});
         assertThat(response.getBody().getTotalElements()).isEqualTo(3);
+    }
+
+    @Test
+    public void getPosts_whenThereArePosts_receivePageWithPostVM() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<TestPage<PostVM>> response = getPosts(new ParameterizedTypeReference<TestPage<PostVM>>() {});
+        PostVM storedPost = response.getBody().getContent().get(0);
+        assertThat(storedPost.getUser().getUsername()).isEqualTo(user.getUsername());
     }
 
     private <T> ResponseEntity<T> getPosts(ParameterizedTypeReference<T> responseType) {

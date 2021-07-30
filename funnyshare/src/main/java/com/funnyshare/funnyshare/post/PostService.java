@@ -18,10 +18,10 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
-    public void save(User user, Post post) {
+    public Post save(User user, Post post) {
         post.setUser(user);
         post.setTimestamp(new Date());
-        postRepository.save(post);
+        return postRepository.save(post);
     }
 
     public Page<Post> getAllPosts(Pageable pageable) {

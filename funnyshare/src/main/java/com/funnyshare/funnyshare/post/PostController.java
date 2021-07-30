@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare.post;
 
+import com.funnyshare.funnyshare.post.vm.PostVM;
 import com.funnyshare.funnyshare.shared.CurrentUser;
 import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,12 @@ public class PostController {
     }
 
     @PostMapping
-    public void createPost(@RequestBody @Valid Post post, @CurrentUser User user) {
-        postService.save(user, post);
+    public PostVM createPost(@RequestBody @Valid Post post, @CurrentUser User user) {
+        return new PostVM(postService.save(user, post));
     }
 
     @GetMapping
-    public Page<?> getAllPosts(Pageable pageable) {
-        return postService.getAllPosts(pageable);
+    public Page<PostVM> getAllPosts(Pageable pageable) {
+        return postService.getAllPosts(pageable).map(PostVM::new);
     }
 }
