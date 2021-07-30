@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/1.0/posts")
+@RequestMapping("/api/1.0")
 public class PostController {
 
     private PostService postService;
@@ -21,13 +21,18 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping
+    @PostMapping("/posts")
     public PostVM createPost(@RequestBody @Valid Post post, @CurrentUser User user) {
         return new PostVM(postService.save(user, post));
     }
 
-    @GetMapping
+    @GetMapping("/posts")
     public Page<PostVM> getAllPosts(Pageable pageable) {
         return postService.getAllPosts(pageable).map(PostVM::new);
+    }
+
+    @GetMapping("/users/{username}/posts")
+    public Page<PostVM> getPostsOfUser(@PathVariable String username, Pageable pageable) {
+        return postService.getPostsOfUser(username, pageable).map(PostVM::new);
     }
 }

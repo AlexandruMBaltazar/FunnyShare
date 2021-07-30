@@ -246,6 +246,43 @@ public class PostControllerTest {
         assertThat(storedPost.getUser().getUsername()).isEqualTo(user.getUsername());
     }
 
+    @Test
+    public void getPostsOfUser_whenUserExists_receivesOk() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<Object> response = getPostsOfUser(user.getUsername(), new ParameterizedTypeReference<Object>() {});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void getPostsOfUser_whenUserDoesNotExists_receivesNotFound() {
+        ResponseEntity<Object> response = getPostsOfUser("unknown-user", new ParameterizedTypeReference<Object>() {});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void getPostsOfUser_whenUserExists_receivesPageWithZeroPosts() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        ResponseEntity<TestPage<Object>> response = getPostsOfUser(user.getUsername(), new ParameterizedTypeReference<TestPage<Object>>() {});
+        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    public void getPostsOfUser_whenUserExistsWithPosts_receivePageWithPostVM() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<TestPage<PostVM>> response = getPostsOfUser(user.getUsername(), new ParameterizedTypeReference<TestPage<PostVM>>() {});
+        PostVM storedPost = response.getBody().getContent().get(0);
+        assertThat(storedPost.getUser().getUsername()).isEqualTo(user.getUsername());
+    }
+
+    private <T> ResponseEntity<T> getPostsOfUser(String username, ParameterizedTypeReference<T> responseType) {
+        String path = "/api/1.0/users/" + username + "/posts";
+        return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
+    }
+
     private <T> ResponseEntity<T> getPosts(ParameterizedTypeReference<T> responseType) {
         return testRestTemplate.exchange(API_1_0_POSTS, HttpMethod.GET, null, responseType);
     }
