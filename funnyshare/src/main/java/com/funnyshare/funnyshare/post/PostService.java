@@ -2,6 +2,8 @@ package com.funnyshare.funnyshare.post;
 
 import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -20,5 +22,9 @@ public class PostService {
         post.setUser(user);
         post.setTimestamp(new Date());
         postRepository.save(post);
+    }
+
+    public Page<Post> getAllPosts(Pageable pageable) {
+        return postRepository.findAll(pageable);
     }
 }

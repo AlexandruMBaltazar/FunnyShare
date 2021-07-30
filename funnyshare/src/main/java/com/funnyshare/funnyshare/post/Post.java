@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare.post;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.funnyshare.funnyshare.user.User;
 import lombok.Data;
 
@@ -25,5 +26,6 @@ public class Post {
     private Date timestamp;
 
     @ManyToOne
+    @JsonIgnore
     private User user;
 }

@@ -3,6 +3,7 @@ package com.funnyshare.funnyshare;
 import com.funnyshare.funnyshare.error.ApiError;
 import com.funnyshare.funnyshare.post.Post;
 import com.funnyshare.funnyshare.post.PostRepository;
+import com.funnyshare.funnyshare.post.PostService;
 import com.funnyshare.funnyshare.user.User;
 import com.funnyshare.funnyshare.user.UserRepository;
 import com.funnyshare.funnyshare.user.UserService;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
@@ -45,6 +48,9 @@ public class PostControllerTest {
 
     @Autowired
     PostRepository postRepository;
+
+    @Autowired
+    PostService postService;
 
     @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
@@ -196,6 +202,31 @@ public class PostControllerTest {
         assertThat(inDBUser.getPosts().size()).isEqualTo(1);
     }
 
+    @Test
+    public void getPosts_whenThereAreNoPosts_receiveOk() {
+        ResponseEntity<Object> response = getPosts(new ParameterizedTypeReference<Object>() {});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void getPosts_whenThereAreNoPosts_receivePageWithZeroItems() {
+        ResponseEntity<TestPage<Object>> response = getPosts(new ParameterizedTypeReference<TestPage<Object>>() {});
+        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    public void getPosts_whenThereArePosts_receivePageWithItems() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+
+        IntStream.rangeClosed(1, 3).forEach(i -> postService.save(user, TestUtil.createValidPost()));
+
+        ResponseEntity<TestPage<Object>> response = getPosts(new ParameterizedTypeReference<TestPage<Object>>() {});
+        assertThat(response.getBody().getTotalElements()).isEqualTo(3);
+    }
+
+    private <T> ResponseEntity<T> getPosts(ParameterizedTypeReference<T> responseType) {
+        return testRestTemplate.exchange(API_1_0_POSTS, HttpMethod.GET, null, responseType);
+    }
 
     private <T> ResponseEntity<T> postPost(Post post, Class<T> responseType) {
         return testRestTemplate.postForEntity(API_1_0_POSTS, post, responseType);

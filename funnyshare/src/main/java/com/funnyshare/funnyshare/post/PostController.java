@@ -3,10 +3,9 @@ package com.funnyshare.funnyshare.post;
 import com.funnyshare.funnyshare.shared.CurrentUser;
 import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -24,5 +23,10 @@ public class PostController {
     @PostMapping
     public void createPost(@RequestBody @Valid Post post, @CurrentUser User user) {
         postService.save(user, post);
+    }
+
+    @GetMapping
+    public Page<?> getAllPosts(Pageable pageable) {
+        return postService.getAllPosts(pageable);
     }
 }
