@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import * as apiCalls from "../api/apiCalls";
 import ProfileCard from "../components/ProfileCard";
 import { connect } from "react-redux";
+import PostFeed from "../components/PostFeed";
 
 class UserPage extends Component {
   state = {
@@ -180,7 +181,16 @@ class UserPage extends Component {
       );
     }
 
-    return <div data-testid="userpage">{pageContent}</div>;
+    return (
+      <div data-testid="userpage">
+        <div className="row">
+          <div className="col">{pageContent}</div>
+          <div className="col">
+            <PostFeed user={this.props.match.params.username} />
+          </div>
+        </div>
+      </div>
+    );
   }
 }
 

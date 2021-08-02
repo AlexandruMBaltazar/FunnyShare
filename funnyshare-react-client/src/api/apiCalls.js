@@ -35,3 +35,10 @@ export const updateUser = (userId, body) => {
 export const postPost = (post) => {
   return axios.post("/api/1.0/posts", post);
 };
+
+export const loadPosts = (username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/posts`
+    : "/api/1.0/posts";
+  return axios.get(`${basePath}?page=0&size=5&sort=id,desc`);
+};

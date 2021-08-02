@@ -62,6 +62,14 @@ const match = {
   },
 };
 
+apiCalls.loadPosts = jest.fn().mockResolvedValue({
+  data: {
+    content: [],
+    number: 0,
+    size: 3,
+  },
+});
+
 let store;
 const setup = (props) => {
   store = configureStore(false);

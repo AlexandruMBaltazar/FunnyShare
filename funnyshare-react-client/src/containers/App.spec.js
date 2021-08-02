@@ -63,6 +63,14 @@ const setUserOneLoggedInStorage = () => {
   );
 };
 
+apiCalls.loadPosts = jest.fn().mockResolvedValue({
+  data: {
+    content: [],
+    number: 0,
+    size: 3,
+  },
+});
+
 describe("App", () => {
   it("dispalys homepage when url is /", () => {
     const { queryByTestId } = setup("/");
