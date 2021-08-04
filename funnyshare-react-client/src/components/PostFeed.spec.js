@@ -41,6 +41,29 @@ const mockSuccessGetPostsSinglePage = {
   },
 };
 
+const mockSuccessGetPostsFirstOfMultiPage = {
+  data: {
+    content: [
+      {
+        id: 10,
+        content: "This is the latest post",
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: "user1",
+          displayName: "display1",
+          image: "profile1.png",
+        },
+      },
+    ],
+    number: 0,
+    first: true,
+    last: false,
+    size: 5,
+    totalPages: 2,
+  },
+};
+
 describe("PostFeed", () => {
   describe("Lifecycle", () => {
     it("calls loadPosts when it is rendered", () => {
@@ -102,6 +125,15 @@ describe("PostFeed", () => {
       const { findByText } = setup();
       const hoaxContent = await findByText("This is the latest post");
       expect(hoaxContent).toBeInTheDocument();
+    });
+
+    it("displays Load More when there are next pages", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
+      expect(loadMore).toBeInTheDocument();
     });
   });
 });

@@ -34,6 +34,9 @@ class PostFeed extends Component {
         {this.state.page.content.map((post) => {
           return <PostView key={post.id} post={post} />;
         })}
+        {this.state.page.last === false && (
+          <div className="card card-header text-center">Load More</div>
+        )}
       </div>
     );
   }
