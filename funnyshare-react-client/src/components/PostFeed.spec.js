@@ -2,9 +2,14 @@ import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import PostFeed from "./PostFeed";
 import * as apiCalls from "../api/apiCalls";
+import { MemoryRouter } from "react-router";
 
 const setup = (props) => {
-  return render(<PostFeed {...props} />);
+  return render(
+    <MemoryRouter>
+      <PostFeed {...props} />
+    </MemoryRouter>
+  );
 };
 
 const mockEmptyResponse = {

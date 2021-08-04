@@ -1,6 +1,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import PostView from "./PostView";
+import { MemoryRouter } from "react-router";
 
 const setup = () => {
   const oneMinute = 60 * 1000;
@@ -18,7 +19,11 @@ const setup = () => {
     },
   };
 
-  return render(<PostView post={post} />);
+  return render(
+    <MemoryRouter>
+      <PostView post={post} />
+    </MemoryRouter>
+  );
 };
 
 describe("PostView", () => {
@@ -42,6 +47,12 @@ describe("PostView", () => {
     it("displays relative time", () => {
       const { queryByText } = setup();
       expect(queryByText("1 minute ago")).toBeInTheDocument();
+    });
+
+    it("has link to user page", () => {
+      const { container } = setup();
+      const anchor = container.querySelector("a");
+      expect(anchor.getAttribute("href")).toBe("/user1");
     });
   });
 });
