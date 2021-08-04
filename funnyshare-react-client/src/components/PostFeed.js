@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import * as apiCalls from "../api/apiCalls";
 import Spinner from "./Spinner";
+import PostView from "./PostView";
 
 class PostFeed extends Component {
   state = {
@@ -31,7 +32,7 @@ class PostFeed extends Component {
     return (
       <div>
         {this.state.page.content.map((post) => {
-          return <span key={post.id}> {post.content} </span>;
+          return <PostView key={post.id} post={post} />;
         })}
       </div>
     );
