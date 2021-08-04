@@ -3,6 +3,7 @@ import * as apiCalls from "../api/apiCalls";
 import ProfileCard from "../components/ProfileCard";
 import { connect } from "react-redux";
 import PostFeed from "../components/PostFeed";
+import Spinner from "../components/Spinner";
 
 class UserPage extends Component {
   state = {
@@ -145,13 +146,7 @@ class UserPage extends Component {
     let pageContent;
 
     if (this.state.isLoadingUser) {
-      pageContent = (
-        <div className="">
-          <div className="spinner-border mx-auto">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      );
+      pageContent = <Spinner />;
     } else if (this.state.userNotFound) {
       pageContent = (
         <div className="alert alert-danger text-center" role="alert">

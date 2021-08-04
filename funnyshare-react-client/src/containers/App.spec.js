@@ -8,6 +8,14 @@ import axios from "axios";
 import * as apiCalls from "../api/apiCalls";
 
 beforeEach(() => {
+  apiCalls.loadPosts = jest.fn().mockResolvedValue({
+    data: {
+      content: [],
+      number: 0,
+      size: 3,
+    },
+  });
+
   localStorage.clear();
   delete axios.defaults.headers.common["Authorization"];
 });
@@ -62,14 +70,6 @@ const setUserOneLoggedInStorage = () => {
     })
   );
 };
-
-apiCalls.loadPosts = jest.fn().mockResolvedValue({
-  data: {
-    content: [],
-    number: 0,
-    size: 3,
-  },
-});
 
 describe("App", () => {
   it("dispalys homepage when url is /", () => {

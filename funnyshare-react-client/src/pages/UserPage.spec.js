@@ -62,14 +62,6 @@ const match = {
   },
 };
 
-apiCalls.loadPosts = jest.fn().mockResolvedValue({
-  data: {
-    content: [],
-    number: 0,
-    size: 3,
-  },
-});
-
 let store;
 const setup = (props) => {
   store = configureStore(false);
@@ -81,6 +73,13 @@ const setup = (props) => {
 };
 
 beforeEach(() => {
+  apiCalls.loadPosts = jest.fn().mockResolvedValue({
+    data: {
+      content: [],
+      number: 0,
+      size: 3,
+    },
+  });
   localStorage.clear();
   delete axios.defaults.headers.common["Authorization"];
 });
@@ -125,8 +124,8 @@ describe("UserPage", () => {
       });
 
       apiCalls.getUser = mockDelayedResponse;
-      const { queryByText } = setup({ match });
-      expect(queryByText("Loading...")).toBeInTheDocument();
+      const { queryAllByText } = setup({ match });
+      expect(queryAllByText("Loading...").length).not.toBe(0);
     });
 
     it("displays the edit button when loggedInUser matches the user in url", async () => {
