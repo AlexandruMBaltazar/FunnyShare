@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.transaction.Transactional;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -276,6 +277,44 @@ public class PostControllerTest {
         ResponseEntity<TestPage<PostVM>> response = getPostsOfUser(user.getUsername(), new ParameterizedTypeReference<TestPage<PostVM>>() {});
         PostVM storedPost = response.getBody().getContent().get(0);
         assertThat(storedPost.getUser().getUsername()).isEqualTo(user.getUsername());
+    }
+
+    @Test
+    public void getOldPosts_whenThereAreNoPosts_receiveOk() {
+        ResponseEntity<Object> response = getOldPosts(5, new ParameterizedTypeReference<Object>() {});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void getOldPosts_whenThereArePosts_receivePageWithItemsProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<TestPage<Object>> response = getOldPosts(fourth.getId(), new ParameterizedTypeReference<TestPage<Object>>() {});
+        assertThat(response.getBody().getTotalElements()).isEqualTo(3);
+    }
+
+    @Test
+    public void getOldPosts_whenThereArePosts_receivePageWithPostVMBeforeProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<TestPage<PostVM>> response = getOldPosts(fourth.getId(), new ParameterizedTypeReference<TestPage<PostVM>>() {});
+        assertThat(response.getBody().getTotalElements()).isEqualTo(3);
+    }
+
+
+    private <T> ResponseEntity<T> getOldPosts(long postId, ParameterizedTypeReference<T> responseType) {
+        String path = API_1_0_POSTS + "/" + postId + "?direction=before&page=0&size=5&sort=id,desc";
+        return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
     }
 
     private <T> ResponseEntity<T> getPostsOfUser(String username, ParameterizedTypeReference<T> responseType) {

@@ -35,4 +35,9 @@ public class PostController {
     public Page<PostVM> getPostsOfUser(@PathVariable String username, Pageable pageable) {
         return postService.getPostsOfUser(username, pageable).map(PostVM::new);
     }
+
+    @GetMapping("/posts/{id:[0-9]+}")
+    public Page<PostVM> getPostsRelative(@PathVariable long id, Pageable pageable) {
+        return postService.getOldPosts(id, pageable).map(PostVM::new);
+    }
 }

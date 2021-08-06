@@ -35,4 +35,8 @@ public class PostService {
         User inDB = userService.getByUsername(username);
         return postRepository.findByUser(inDB, pageable);
     }
+
+    public Page<Post> getOldPosts(long id, Pageable pageable) {
+        return postRepository.findByIdLessThan(id, pageable);
+    }
 }
