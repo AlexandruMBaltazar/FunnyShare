@@ -6,6 +6,7 @@ import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -39,5 +40,10 @@ public class PostController {
     @GetMapping("/posts/{id:[0-9]+}")
     public Page<PostVM> getPostsRelative(@PathVariable long id, Pageable pageable) {
         return postService.getOldPosts(id, pageable).map(PostVM::new);
+    }
+
+    @GetMapping("/users/{username}/posts/{id:[0-9]+}")
+    public Page<PostVM> getPostsRelativeForUser(@PathVariable String username, @PathVariable long id, Pageable pageable) {
+        return postService.getOldPostsOfUser(id, username, pageable).map(PostVM::new);
     }
 }
