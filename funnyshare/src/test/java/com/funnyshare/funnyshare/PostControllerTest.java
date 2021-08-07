@@ -379,6 +379,66 @@ public class PostControllerTest {
         assertThat(response.getBody().get(0).getDate()).isGreaterThan(0);
     }
 
+    @Test
+    public void getNewPostsOfUser_whenUserExistThereAreNoHoaxes_receiveOk() {
+        userService.save(TestUtil.createValidUser("user1"));
+        ResponseEntity<Object> response = getNewPostsOfUser(5, "user1", new ParameterizedTypeReference<Object>() {});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void getNewPostsOfUser_whenUserExistAndThereArePosts_receiveListWithItemsAfterProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<List<Object>> response = getNewPostsOfUser(fourth.getId(), "user1", new ParameterizedTypeReference<List<Object>>() {});
+        assertThat(response.getBody().size()).isEqualTo(1);
+    }
+
+    @Test
+    public void getNewPostsOfUser_whenUserExistAndThereArePosts_receiveListWithPostVMAfterProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<List<PostVM>> response = getNewPostsOfUser(fourth.getId(), "user1", new ParameterizedTypeReference<List<PostVM>>() {});
+        assertThat(response.getBody().get(0).getDate()).isGreaterThan(0);
+    }
+
+
+    @Test
+    public void getNewPostsOfUser_whenUserDoesNotExistThereAreNoPosts_receiveNotFound() {
+        ResponseEntity<Object> response = getNewPostsOfUser(5, "user1", new ParameterizedTypeReference<Object>() {});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void getNewPostsOfUser_whenUserExistAndThereAreNoPosts_receiveListWithZeroItemsAfterProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        userService.save(TestUtil.createValidUser("user2"));
+
+        ResponseEntity<List<PostVM>> response = getNewPostsOfUser(fourth.getId(), "user2", new ParameterizedTypeReference<List<PostVM>>() {});
+        assertThat(response.getBody().size()).isEqualTo(0);
+    }
+
+    public <T> ResponseEntity<T> getNewPostsOfUser(long hoaxId, String username, ParameterizedTypeReference<T> responseType){
+        String path = "/api/1.0/users/" + username + "/posts/" + hoaxId +"?direction=after&sort=id,desc";
+        return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
+    }
+
     public <T> ResponseEntity<T> getNewPosts(long postId, ParameterizedTypeReference<T> responseType){
         String path = API_1_0_POSTS + "/" + postId +"?direction=after&sort=id,desc";
         return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);

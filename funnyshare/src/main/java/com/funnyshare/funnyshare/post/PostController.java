@@ -56,7 +56,18 @@ public class PostController {
     }
 
     @GetMapping("/users/{username}/posts/{id:[0-9]+}")
-    public Page<PostVM> getPostsRelativeForUser(@PathVariable String username, @PathVariable long id, Pageable pageable) {
-        return postService.getOldPostsOfUser(id, username, pageable).map(PostVM::new);
+    public ResponseEntity<?> getPostsRelativeForUser(@PathVariable String username, @PathVariable long id, Pageable pageable,
+                                                @RequestParam(name = "direction", defaultValue = "after") String direction) {
+
+        if (!direction.equalsIgnoreCase("after")) {
+            return ResponseEntity.ok(postService.getOldPostsOfUser(id, username, pageable).map(PostVM::new));
+        }
+
+        List<PostVM> newPosts = postService.getNewPostsOfUser(id, username, pageable)
+                .stream()
+                .map(PostVM::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(newPosts);
     }
 }

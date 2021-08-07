@@ -49,4 +49,9 @@ public class PostService {
     public List<Post> getNewPosts(long id, Pageable pageable) {
         return postRepository.findByIdGreaterThan(id, pageable.getSort());
     }
+
+    public List<Post> getNewPostsOfUser(long id, String username, Pageable pageable) {
+        User inDB = userService.getByUsername(username);
+        return postRepository.findByIdGreaterThanAndUser(id, inDB, pageable.getSort());
+    }
 }
