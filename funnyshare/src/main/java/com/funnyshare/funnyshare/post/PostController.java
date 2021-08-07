@@ -6,10 +6,14 @@ import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/1.0")
@@ -38,8 +42,17 @@ public class PostController {
     }
 
     @GetMapping("/posts/{id:[0-9]+}")
-    public Page<PostVM> getPostsRelative(@PathVariable long id, Pageable pageable) {
-        return postService.getOldPosts(id, pageable).map(PostVM::new);
+    public ResponseEntity<?> getPostsRelative(@PathVariable long id, Pageable pageable,
+                                              @RequestParam(name = "direction", defaultValue = "after") String direction) {
+        if (!direction.equalsIgnoreCase("after")) {
+            return ResponseEntity.ok(postService.getOldPosts(id, pageable).map(PostVM::new));
+        }
+
+        List<PostVM> newPosts = postService.getNewPosts(id, pageable)
+                .stream()
+                .map(PostVM::new).collect(Collectors.toList());
+
+        return ResponseEntity.ok(newPosts);
     }
 
     @GetMapping("/users/{username}/posts/{id:[0-9]+}")

@@ -26,6 +26,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.transaction.Transactional;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -350,6 +351,37 @@ public class PostControllerTest {
 
         ResponseEntity<TestPage<PostVM>> response = getOldPostsOfUser(fourth.getId(), "user2", new ParameterizedTypeReference<TestPage<PostVM>>() {});
         assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    public void getNewPosts_whenThereArePosts_receiveListOfItemsAfterProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<List<Object>> response = getNewPosts(fourth.getId(), new ParameterizedTypeReference<List<Object>>() {});
+        assertThat(response.getBody().size()).isEqualTo(1);
+    }
+
+    @Test
+    public void getNewPosts_whenThereArePosts_receiveListOfPostVMAfterProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<List<PostVM>> response = getNewPosts(fourth.getId(), new ParameterizedTypeReference<List<PostVM>>() {});
+        assertThat(response.getBody().get(0).getDate()).isGreaterThan(0);
+    }
+
+    public <T> ResponseEntity<T> getNewPosts(long postId, ParameterizedTypeReference<T> responseType){
+        String path = API_1_0_POSTS + "/" + postId +"?direction=after&sort=id,desc";
+        return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
     }
 
     private <T> ResponseEntity<T> getOldPosts(long postId, ParameterizedTypeReference<T> responseType) {
