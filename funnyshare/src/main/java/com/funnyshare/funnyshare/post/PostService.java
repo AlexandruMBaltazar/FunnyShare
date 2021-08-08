@@ -54,4 +54,13 @@ public class PostService {
         User inDB = userService.getByUsername(username);
         return postRepository.findByIdGreaterThanAndUser(id, inDB, pageable.getSort());
     }
+
+    public long getNewPostsCount(long id) {
+        return postRepository.countByIdGreaterThan(id);
+    }
+
+    public long getNewPostsCountOfUser(long id, String username) {
+        User inDB = userService.getByUsername(username);
+        return postRepository.countByIdGreaterThanAndUser(id, inDB);
+    }
 }

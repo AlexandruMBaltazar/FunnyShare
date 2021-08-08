@@ -18,4 +18,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByIdGreaterThan(long id, Sort sort);
 
     List<Post> findByIdGreaterThanAndUser(long id, User user, Sort sort);
+
+    long countByIdGreaterThan(long id);
+
+    long countByIdGreaterThanAndUser(long id, User user);
 }

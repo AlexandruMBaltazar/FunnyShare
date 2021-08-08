@@ -434,6 +434,43 @@ public class PostControllerTest {
         assertThat(response.getBody().size()).isEqualTo(0);
     }
 
+    @Test
+    public void getNewPostCount_whenThereArePosts_receiveCountAfterProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<Map<String, Long>> response = getNewPostCount(fourth.getId(), new ParameterizedTypeReference<Map<String, Long>>() {});
+        assertThat(response.getBody().get("count")).isEqualTo(1);
+    }
+
+    @Test
+    public void getNewPostCountOfUser_whenThereArePosts_receiveCountAfterProvidedId() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+        Post fourth = postService.save(user, TestUtil.createValidPost());
+        postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<Map<String, Long>> response = getNewPostCountOfUser(fourth.getId(), "user1", new ParameterizedTypeReference<Map<String, Long>>() {});
+        assertThat(response.getBody().get("count")).isEqualTo(1);
+    }
+
+    public <T> ResponseEntity<T> getNewPostCountOfUser(long hoaxId, String username, ParameterizedTypeReference<T> responseType){
+        String path = "/api/1.0/users/" + username + "/posts/" + hoaxId +"?direction=after&count=true";
+        return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
+    }
+
+
+    public <T> ResponseEntity<T> getNewPostCount(long hoaxId, ParameterizedTypeReference<T> responseType){
+        String path = API_1_0_POSTS + "/" + hoaxId +"?direction=after&count=true";
+        return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
+    }
+
     public <T> ResponseEntity<T> getNewPostsOfUser(long hoaxId, String username, ParameterizedTypeReference<T> responseType){
         String path = "/api/1.0/users/" + username + "/posts/" + hoaxId +"?direction=after&sort=id,desc";
         return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
