@@ -42,47 +42,48 @@ public class PostController {
         return postService.getPostsOfUser(username, pageable).map(PostVM::new);
     }
 
-    @GetMapping("/posts/{id:[0-9]+}")
+    @GetMapping({"/posts/{id:[0-9]+}", "/users/{username}/posts/{id:[0-9]+}"})
     public ResponseEntity<?> getPostsRelative(@PathVariable long id, Pageable pageable,
+                                              @PathVariable(required = false) String username,
                                               @RequestParam(name = "direction", defaultValue = "after") String direction,
                                               @RequestParam(name = "count", defaultValue = "false", required = false) boolean count
     ) {
         if (!direction.equalsIgnoreCase("after")) {
-            return ResponseEntity.ok(postService.getOldPosts(id, pageable).map(PostVM::new));
+            return ResponseEntity.ok(postService.getOldPosts(id, username, pageable).map(PostVM::new));
         }
 
         if (count) {
-            long newPostCount = postService.getNewPostsCount(id);
+            long newPostCount = postService.getNewPostsCount(id, username);
             return  ResponseEntity.ok(Collections.singletonMap("count", newPostCount));
         }
 
-        List<PostVM> newPosts = postService.getNewPosts(id, pageable)
+        List<PostVM> newPosts = postService.getNewPosts(id, username, pageable)
                 .stream()
                 .map(PostVM::new).collect(Collectors.toList());
 
         return ResponseEntity.ok(newPosts);
     }
 
-    @GetMapping("/users/{username}/posts/{id:[0-9]+}")
-    public ResponseEntity<?> getPostsRelativeForUser(@PathVariable String username, @PathVariable long id, Pageable pageable,
-                                                @RequestParam(name = "direction", defaultValue = "after") String direction,
-                                                @RequestParam(name = "count", defaultValue = "false", required = false) boolean count
-    ) {
-
-        if (!direction.equalsIgnoreCase("after")) {
-            return ResponseEntity.ok(postService.getOldPostsOfUser(id, username, pageable).map(PostVM::new));
-        }
-
-        if (count) {
-            long newPostCount = postService.getNewPostsCountOfUser(id, username);
-            return  ResponseEntity.ok(Collections.singletonMap("count", newPostCount));
-        }
-
-        List<PostVM> newPosts = postService.getNewPostsOfUser(id, username, pageable)
-                .stream()
-                .map(PostVM::new)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(newPosts);
-    }
+//    @GetMapping("/users/{username}/posts/{id:[0-9]+}")
+//    public ResponseEntity<?> getPostsRelativeForUser(@PathVariable String username, @PathVariable long id, Pageable pageable,
+//                                                @RequestParam(name = "direction", defaultValue = "after") String direction,
+//                                                @RequestParam(name = "count", defaultValue = "false", required = false) boolean count
+//    ) {
+//
+//        if (!direction.equalsIgnoreCase("after")) {
+//            return ResponseEntity.ok(postService.getOldPostsOfUser(id, username, pageable).map(PostVM::new));
+//        }
+//
+//        if (count) {
+//            long newPostCount = postService.getNewPostsCountOfUser(id, username);
+//            return  ResponseEntity.ok(Collections.singletonMap("count", newPostCount));
+//        }
+//
+//        List<PostVM> newPosts = postService.getNewPostsOfUser(id, username, pageable)
+//                .stream()
+//                .map(PostVM::new)
+//                .collect(Collectors.toList());
+//
+//        return ResponseEntity.ok(newPosts);
+//    }
 }

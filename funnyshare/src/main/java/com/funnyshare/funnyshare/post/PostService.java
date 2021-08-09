@@ -5,8 +5,15 @@ import com.funnyshare.funnyshare.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
 
@@ -37,30 +44,49 @@ public class PostService {
         return postRepository.findByUser(inDB, pageable);
     }
 
-    public Page<Post> getOldPosts(long id, Pageable pageable) {
-        return postRepository.findByIdLessThan(id, pageable);
+    public Page<Post> getOldPosts(long id, String username, Pageable pageable) {
+        Specification<Post> spec = Specification.where(idLessThan(id));
+
+        if (username != null) {
+            User inDB = userService.getByUsername(username);
+            spec = spec.and(userIs(inDB));
+        }
+
+        return postRepository.findAll(spec, pageable);
     }
 
-    public Page<Post> getOldPostsOfUser(long id, String username, Pageable pageable) {
-        User inDB = userService.getByUsername(username);
-        return postRepository.findByIdLessThanAndUser(id, inDB, pageable);
+    public List<Post> getNewPosts(long id, String username, Pageable pageable) {
+        Specification<Post> spec = Specification.where(idGreaterThan(id));
+
+        if (username != null) {
+            User inDB = userService.getByUsername(username);
+            spec = spec.and(userIs(inDB));
+        }
+
+        return postRepository.findAll(spec, pageable.getSort());
     }
 
-    public List<Post> getNewPosts(long id, Pageable pageable) {
-        return postRepository.findByIdGreaterThan(id, pageable.getSort());
+    public long getNewPostsCount(long id, String username) {
+        Specification<Post> spec = Specification.where(idGreaterThan(id));
+
+        if (username != null) {
+            User inDB = userService.getByUsername(username);
+            spec = spec.and(userIs(inDB));
+        }
+
+        return postRepository.count(spec);
     }
 
-    public List<Post> getNewPostsOfUser(long id, String username, Pageable pageable) {
-        User inDB = userService.getByUsername(username);
-        return postRepository.findByIdGreaterThanAndUser(id, inDB, pageable.getSort());
+    private Specification<Post> userIs(User user) {
+        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("user"), user);
     }
 
-    public long getNewPostsCount(long id) {
-        return postRepository.countByIdGreaterThan(id);
+    private Specification<Post> idLessThan(long id) {
+        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.lessThan(root.get("id"), id);
     }
 
-    public long getNewPostsCountOfUser(long id, String username) {
-        User inDB = userService.getByUsername(username);
-        return postRepository.countByIdGreaterThanAndUser(id, inDB);
+    private Specification<Post> idGreaterThan(long id) {
+        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.greaterThan(root.get("id"), id);
     }
+
 }
