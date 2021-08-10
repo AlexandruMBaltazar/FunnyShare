@@ -1,5 +1,5 @@
 import React from "react";
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import PostFeed from "./PostFeed";
 import * as apiCalls from "../api/apiCalls";
 import { MemoryRouter } from "react-router";
@@ -55,10 +55,44 @@ const mockSuccessGetPostsFirstOfMultiPage = {
           image: "profile1.png",
         },
       },
+      {
+        id: 9,
+        content: "This is post 9",
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: "user1",
+          displayName: "display1",
+          image: "profile1.png",
+        },
+      },
     ],
     number: 0,
     first: true,
     last: false,
+    size: 5,
+    totalPages: 2,
+  },
+};
+
+const mockSuccessGetPostsLastOfMultiPage = {
+  data: {
+    content: [
+      {
+        id: 1,
+        content: "This is the oldest post",
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: "user1",
+          displayName: "display1",
+          image: "profile1.png",
+        },
+      },
+    ],
+    number: 0,
+    first: true,
+    last: true,
     size: 5,
     totalPages: 2,
   },
@@ -136,4 +170,64 @@ describe("PostFeed", () => {
       expect(loadMore).toBeInTheDocument();
     });
   });
+
+  describe("Interactions", () => {
+    it("calls loadOldPosts with post id when clicking Load More", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadOldPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsLastOfMultiPage);
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
+      fireEvent.click(loadMore);
+      const firstParam = apiCalls.loadOldPosts.mock.calls[0][0];
+      expect(firstParam).toBe(9);
+    });
+
+    it("calls loadOldPosts with post id and username when clicking Load More when rendered with user property", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadOldPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsLastOfMultiPage);
+      const { findByText } = setup({ user: "user1" });
+      const loadMore = await findByText("Load More");
+      fireEvent.click(loadMore);
+      expect(apiCalls.loadOldPosts).toHaveBeenCalledWith(9, "user1");
+    });
+
+    it("displays loaded old post when loadOldPost api call success", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadOldPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsLastOfMultiPage);
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
+      fireEvent.click(loadMore);
+      const oldPost = await findByText("This is the oldest post");
+      expect(oldPost).toBeInTheDocument();
+    });
+
+    it("hides Load More when loadOldPosts api call returns last page", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadOldPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsLastOfMultiPage);
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
+      fireEvent.click(loadMore);
+      await waitFor(() => {
+        expect(loadMore).not.toBeInTheDocument();
+      });
+    });
+  });
 });
+
+console.error = () => {};
