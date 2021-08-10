@@ -102,4 +102,62 @@ describe("apiCalls", () => {
       );
     });
   });
+
+  describe("loadOldPosts", () => {
+    it("calls /api/1.0/posts/5?direction=before&page=0&size=5&sort=id,desc when post id param provided", () => {
+      const mockGetPosts = jest.fn();
+      axios.get = mockGetPosts;
+      apiCalls.loadOldPosts(5);
+      expect(mockGetPosts).toBeCalledWith(
+        "/api/1.0/posts/5?direction=before&page=0&size=5&sort=id,desc"
+      );
+    });
+
+    it("calls /api/1.0/users/user3/posts/5?direction=before&page=0&size=5&sort=id,desc when post id and username param provided", () => {
+      const mockGetPosts = jest.fn();
+      axios.get = mockGetPosts;
+      apiCalls.loadOldPosts(5, "user3");
+      expect(mockGetPosts).toBeCalledWith(
+        "/api/1.0/users/user3/posts/5?direction=before&page=0&size=5&sort=id,desc"
+      );
+    });
+  });
+
+  describe("loadNewPosts", () => {
+    it("calls /api/1.0/posts/5?direction=after&sort=id,desc when post id param provided", () => {
+      const mockGetPosts = jest.fn();
+      axios.get = mockGetPosts;
+      apiCalls.loadNewPosts(5);
+      expect(mockGetPosts).toBeCalledWith(
+        "/api/1.0/posts/5?direction=after&sort=id,desc"
+      );
+    });
+    it("calls /api/1.0/users/user3/posts/5?direction=after&sort=id,desc when posts id and username param provided", () => {
+      const mockGetPosts = jest.fn();
+      axios.get = mockGetPosts;
+      apiCalls.loadNewPosts(5, "user3");
+      expect(mockGetPosts).toBeCalledWith(
+        "/api/1.0/users/user3/posts/5?direction=after&sort=id,desc"
+      );
+    });
+  });
+
+  describe("loadNewPostsCount", () => {
+    it("calls /api/1.0/posts/5?direction=after&count=true when posts id param provided", () => {
+      const mockGetPosts = jest.fn();
+      axios.get = mockGetPosts;
+      apiCalls.loadNewPostsCount(5);
+      expect(mockGetPosts).toBeCalledWith(
+        "/api/1.0/posts/5?direction=after&count=true"
+      );
+    });
+    it("calls /api/1.0/users/user3/posts/5?direction=after&count=true when posts id and username param provided", () => {
+      const mockGetPosts = jest.fn();
+      axios.get = mockGetPosts;
+      apiCalls.loadNewPostsCount(5, "user3");
+      expect(mockGetPosts).toBeCalledWith(
+        "/api/1.0/users/user3/posts/5?direction=after&count=true"
+      );
+    });
+  });
 });

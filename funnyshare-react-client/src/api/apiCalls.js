@@ -42,3 +42,30 @@ export const loadPosts = (username) => {
     : "/api/1.0/posts";
   return axios.get(`${basePath}?page=0&size=5&sort=id,desc`);
 };
+
+export const loadOldPosts = (postId, username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/posts`
+    : "/api/1.0/posts";
+
+  const path = `${basePath}/${postId}?direction=before&page=0&size=5&sort=id,desc`;
+  return axios.get(path);
+};
+
+export const loadNewPosts = (postId, username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/posts`
+    : "/api/1.0/posts";
+
+  const path = `${basePath}/${postId}?direction=after&sort=id,desc`;
+  return axios.get(path);
+};
+
+export const loadNewPostsCount = (postId, username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/posts`
+    : "/api/1.0/posts";
+
+  const path = `${basePath}/${postId}?direction=after&count=true`;
+  return axios.get(path);
+};
