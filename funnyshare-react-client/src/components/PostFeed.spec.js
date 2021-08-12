@@ -4,6 +4,34 @@ import PostFeed from "./PostFeed";
 import * as apiCalls from "../api/apiCalls";
 import { MemoryRouter } from "react-router";
 
+const originalSetInterval = window.setInterval;
+const originalClearInterval = window.clearInterval;
+
+let timedFunction;
+
+const useFakeIntervals = () => {
+  window.setInterval = (callback, interval) => {
+    if (!callback.toString().startsWith("function")) {
+      timedFunction = callback;
+      return 111111;
+    }
+  };
+  window.clearInterval = (id) => {
+    if (id === 111111) {
+      timedFunction = undefined;
+    }
+  };
+};
+
+const useRealIntervals = () => {
+  window.setInterval = originalSetInterval;
+  window.clearInterval = originalClearInterval;
+};
+
+const runTimer = () => {
+  timedFunction && timedFunction();
+};
+
 const setup = (props) => {
   return render(
     <MemoryRouter>
@@ -98,6 +126,12 @@ const mockSuccessGetPostsLastOfMultiPage = {
   },
 };
 
+beforeEach(() => {
+  apiCalls.loadNewPostsCount = jest
+    .fn()
+    .mockResolvedValue({ data: { count: 1 } });
+});
+
 describe("PostFeed", () => {
   describe("Lifecycle", () => {
     it("calls loadPosts when it is rendered", () => {
@@ -117,6 +151,92 @@ describe("PostFeed", () => {
       setup();
       const parameter = apiCalls.loadPosts.mock.calls[0][0];
       expect(parameter).toBeUndefined();
+    });
+
+    it("calls loadNewPostsCount with topPost id", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+
+      const { findByText } = setup();
+      await findByText("This is the latest post");
+      runTimer();
+      await findByText("There is 1 new post");
+      const firstParam = apiCalls.loadNewPostsCount.mock.calls[0][0];
+      expect(firstParam).toBe(10);
+      useRealIntervals();
+    });
+
+    it("calls loadNewPostsCount with topPost id and username when rendered with user property", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest post");
+      runTimer();
+      await findByText("There is 1 new post");
+      expect(apiCalls.loadNewPostsCount).toHaveBeenCalledWith(10, "user1");
+      useRealIntervals();
+    });
+
+    it("displays new post count as 1 after loadNewPostsCount success", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest post");
+      runTimer();
+      const newPostCount = await findByText("There is 1 new post");
+      expect(newPostCount).toBeInTheDocument();
+      useRealIntervals();
+    });
+
+    it("displays new post count constantly", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { findByText } = setup({ user: "user1" });
+      await findByText("This is the latest post");
+      runTimer();
+      await findByText("There is 1 new post");
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 2 } });
+      runTimer();
+      const newPostCount = await findByText("There are 2 new posts");
+      expect(newPostCount).toBeInTheDocument();
+      useRealIntervals();
+    });
+
+    it("displays new post count as 1 after loadNewPostsCount success when user does not have posts initially", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest.fn().mockResolvedValue(mockEmptyResponse);
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { findByText } = setup({ user: "user1" });
+      await findByText("There are no posts");
+      runTimer();
+      const newPostCount = await findByText("There is 1 new post");
+      expect(newPostCount).toBeInTheDocument();
+      useRealIntervals();
     });
   });
 

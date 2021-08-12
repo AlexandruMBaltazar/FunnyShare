@@ -9,14 +9,34 @@ class PostFeed extends Component {
       content: [],
     },
     isLoadingPosts: false,
+    newPostCount: 0,
   };
 
   componentDidMount() {
     this.setState({ isLoadingPosts: true });
     apiCalls.loadPosts(this.props.user).then((response) => {
-      this.setState({ page: response.data, isLoadingPosts: false });
+      this.setState({ page: response.data, isLoadingPosts: false }, () => {
+        this.counter = setInterval(this.checkCount, 3000);
+      });
     });
   }
+
+  componentWillUnmount() {
+    clearInterval(this.counter);
+  }
+
+  checkCount = () => {
+    const posts = this.state.page.content;
+    let topPostId = 0;
+
+    if (posts.length > 0) {
+      topPostId = posts[0].id;
+    }
+
+    apiCalls.loadNewPostsCount(topPostId, this.props.user).then((response) => {
+      this.setState({ newPostCount: response.data.count });
+    });
+  };
 
   onClickLoadMore = () => {
     const posts = this.state.page.content;
@@ -40,7 +60,7 @@ class PostFeed extends Component {
       return <Spinner />;
     }
 
-    if (this.state.page.content.length === 0) {
+    if (this.state.page.content.length === 0 && this.state.newPostCount === 0) {
       return (
         <div className="card card-header text-center">There are no posts</div>
       );
@@ -48,6 +68,13 @@ class PostFeed extends Component {
 
     return (
       <div>
+        {this.state.newPostCount > 0 && (
+          <div className="card card-header text-center">
+            {this.state.newPostCount === 1
+              ? "There is 1 new post"
+              : `There are ${this.state.newPostCount} new posts`}
+          </div>
+        )}
         {this.state.page.content.map((post) => {
           return <PostView key={post.id} post={post} />;
         })}
