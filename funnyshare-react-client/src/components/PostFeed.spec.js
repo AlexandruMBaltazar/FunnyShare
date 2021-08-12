@@ -46,6 +46,22 @@ const mockEmptyResponse = {
   },
 };
 
+const mockSuccessGetNewPostsList = {
+  data: [
+    {
+      id: 21,
+      content: "This is the newest post",
+      date: 1561294668539,
+      user: {
+        id: 1,
+        username: "user1",
+        displayName: "display1",
+        image: "profile1.png",
+      },
+    },
+  ],
+};
+
 const mockSuccessGetPostsSinglePage = {
   data: {
     content: [
@@ -346,6 +362,83 @@ describe("PostFeed", () => {
       await waitFor(() => {
         expect(loadMore).not.toBeInTheDocument();
       });
+    });
+
+    // load new hoaxes
+
+    it("calls loadNewPosts with post id when clicking New Post Count Card", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewPostsList);
+      const { findByText } = setup();
+      runTimer();
+      const newPostCount = await findByText("There is 1 new post");
+      fireEvent.click(newPostCount);
+      const firstParam = apiCalls.loadNewPosts.mock.calls[0][0];
+      expect(firstParam).toBe(10);
+      useRealIntervals();
+    });
+
+    it("calls loadNewPosts with post id and username when clicking New Post Count Card", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewPostsList);
+      const { findByText } = setup({ user: "user1" });
+      runTimer();
+      const newPostCount = await findByText("There is 1 new post");
+      fireEvent.click(newPostCount);
+      const newPost = await findByText("This is the newest post");
+      expect(newPost).toBeInTheDocument();
+      useRealIntervals();
+    });
+
+    it("hides new post count when loadNewPosts api call success", async () => {
+      useFakeIntervals();
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadNewPostsCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewPostsList);
+      const { findByText } = setup({ user: "user1" });
+      runTimer();
+      const newPostCount = await findByText("There is 1 new post");
+      fireEvent.click(newPostCount);
+      await findByText("This is the newest post");
+      expect(newPostCount).not.toBeInTheDocument();
+      useRealIntervals();
+    });
+
+    it("does not allow loadOldPosts to be called when there is an active api call about it", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadOldPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsLastOfMultiPage);
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
+      fireEvent.click(loadMore);
+      fireEvent.click(loadMore);
+
+      expect(apiCalls.loadOldPosts).toHaveBeenCalledTimes(1);
     });
   });
 });

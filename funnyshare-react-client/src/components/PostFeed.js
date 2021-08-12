@@ -55,6 +55,21 @@ class PostFeed extends Component {
     });
   };
 
+  onClickLoadNew = () => {
+    const posts = this.state.page.content;
+    let topPostId = 0;
+
+    if (posts.length > 0) {
+      topPostId = posts[0].id;
+    }
+
+    apiCalls.loadNewPosts(topPostId, this.props.user).then((response) => {
+      const page = { ...this.state.page };
+      page.content = [...response.data, ...page.content];
+      this.setState({ page, newPostCount: 0 });
+    });
+  };
+
   render() {
     if (this.state.isLoadingPosts) {
       return <Spinner />;
@@ -69,7 +84,11 @@ class PostFeed extends Component {
     return (
       <div>
         {this.state.newPostCount > 0 && (
-          <div className="card card-header text-center">
+          <div
+            className="card card-header text-center"
+            style={{ cursor: "pointer" }}
+            onClick={this.onClickLoadNew}
+          >
             {this.state.newPostCount === 1
               ? "There is 1 new post"
               : `There are ${this.state.newPostCount} new posts`}
