@@ -10,6 +10,8 @@ class PostFeed extends Component {
     },
     isLoadingPosts: false,
     newPostCount: 0,
+    isLoadingOldPosts: false,
+    isLoadingNewPosts: false,
   };
 
   componentDidMount() {
@@ -45,14 +47,19 @@ class PostFeed extends Component {
     }
 
     const postAtBottom = posts[posts.length - 1];
+    this.setState({ isLoadingOldPosts: true });
+    apiCalls
+      .loadOldPosts(postAtBottom.id, this.props.user)
+      .then((response) => {
+        const page = { ...this.state.page };
+        page.content = [...page.content, ...response.data.content];
+        page.last = response.data.last;
 
-    apiCalls.loadOldPosts(postAtBottom.id, this.props.user).then((response) => {
-      const page = { ...this.state.page };
-      page.content = [...page.content, ...response.data.content];
-      page.last = response.data.last;
-
-      this.setState({ page });
-    });
+        this.setState({ page, isLoadingOldPosts: false });
+      })
+      .catch((error) => {
+        this.setState({ isLoadingOldPosts: false });
+      });
   };
 
   onClickLoadNew = () => {
@@ -62,12 +69,17 @@ class PostFeed extends Component {
     if (posts.length > 0) {
       topPostId = posts[0].id;
     }
-
-    apiCalls.loadNewPosts(topPostId, this.props.user).then((response) => {
-      const page = { ...this.state.page };
-      page.content = [...response.data, ...page.content];
-      this.setState({ page, newPostCount: 0 });
-    });
+    this.setState({ isLoadingNewPosts: true });
+    apiCalls
+      .loadNewPosts(topPostId, this.props.user)
+      .then((response) => {
+        const page = { ...this.state.page };
+        page.content = [...response.data, ...page.content];
+        this.setState({ page, newPostCount: 0, isLoadingNewPosts: false });
+      })
+      .catch((error) => {
+        this.setState({ isLoadingNewPosts: false });
+      });
   };
 
   render() {
@@ -81,17 +93,22 @@ class PostFeed extends Component {
       );
     }
 
+    const newPostCountMessage =
+      this.state.newPostCount === 1
+        ? "There is 1 new post"
+        : `There are ${this.state.newPostCount} new posts`;
+
     return (
       <div>
         {this.state.newPostCount > 0 && (
           <div
             className="card card-header text-center"
-            style={{ cursor: "pointer" }}
-            onClick={this.onClickLoadNew}
+            style={{
+              cursor: this.state.isLoadingNewPosts ? "not-allowed" : "pointer",
+            }}
+            onClick={!this.state.isLoadingNewPosts && this.onClickLoadNew}
           >
-            {this.state.newPostCount === 1
-              ? "There is 1 new post"
-              : `There are ${this.state.newPostCount} new posts`}
+            {this.state.isLoadingNewPosts ? <Spinner /> : newPostCountMessage}
           </div>
         )}
         {this.state.page.content.map((post) => {
@@ -100,10 +117,12 @@ class PostFeed extends Component {
         {this.state.page.last === false && (
           <div
             className="card card-header text-center"
-            style={{ cursor: "pointer" }}
-            onClick={this.onClickLoadMore}
+            style={{
+              cursor: this.state.isLoadingOldPosts ? "not-allowed" : "pointer",
+            }}
+            onClick={!this.state.isLoadingOldPosts && this.onClickLoadMore}
           >
-            Load More
+            {this.state.isLoadingOldPosts ? <Spinner /> : "Load More"}
           </div>
         )}
       </div>

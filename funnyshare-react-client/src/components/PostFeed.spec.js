@@ -1,5 +1,10 @@
 import React from "react";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import PostFeed from "./PostFeed";
 import * as apiCalls from "../api/apiCalls";
 import { MemoryRouter } from "react-router";
@@ -113,6 +118,29 @@ const mockSuccessGetPostsFirstOfMultiPage = {
     ],
     number: 0,
     first: true,
+    last: false,
+    size: 5,
+    totalPages: 2,
+  },
+};
+
+const mockSuccessGetHoaxesMiddleOfMultiPage = {
+  data: {
+    content: [
+      {
+        id: 5,
+        content: "This post is in middle page",
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: "user1",
+          displayName: "display1",
+          image: "profile1.png",
+        },
+      },
+    ],
+    number: 0,
+    first: false,
     last: false,
     size: 5,
     totalPages: 2,
@@ -436,9 +464,46 @@ describe("PostFeed", () => {
       const { findByText } = setup();
       const loadMore = await findByText("Load More");
       fireEvent.click(loadMore);
-      fireEvent.click(loadMore);
 
       expect(apiCalls.loadOldPosts).toHaveBeenCalledTimes(1);
+    });
+
+    it("replaces Load More with spinner when there is an active api call about it", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadOldPosts = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(mockSuccessGetPostsLastOfMultiPage);
+          }, 300);
+        });
+      });
+      const { findByText } = setup();
+      const loadMore = await findByText("Load More");
+      fireEvent.click(loadMore);
+      const spinner = await findByText("Loading...");
+      expect(spinner).toBeInTheDocument();
+    });
+
+    it("replaces Spinner with Load More after active api call finished with error", async () => {
+      apiCalls.loadPosts = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetPostsFirstOfMultiPage);
+      apiCalls.loadOldPosts = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            reject({ response: { data: {} } });
+          }, 300);
+        });
+      });
+      const { findByText, queryByText } = setup();
+      const loadMore = await findByText("Load More");
+      fireEvent.click(loadMore);
+      const spinner = await findByText("Loading...");
+      await waitForElementToBeRemoved(spinner);
+      expect(queryByText("Loading...")).not.toBeInTheDocument();
+      expect(queryByText("Load More")).toBeInTheDocument();
     });
   });
 });
