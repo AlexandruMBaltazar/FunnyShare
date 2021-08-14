@@ -2,6 +2,7 @@ package com.funnyshare.funnyshare;
 
 import com.funnyshare.funnyshare.configuration.AppConfiguration;
 import com.funnyshare.funnyshare.file.FileAttachment;
+import com.funnyshare.funnyshare.file.FileAttachmentRepository;
 import com.funnyshare.funnyshare.user.UserRepository;
 import com.funnyshare.funnyshare.user.UserService;
 import org.apache.commons.io.FileUtils;
@@ -37,6 +38,9 @@ public class FileUploadControllerTest {
 
     @Autowired
     AppConfiguration appConfiguration;
+
+    @Autowired
+    FileAttachmentRepository fileAttachmentRepository;
 
     @BeforeEach
     public void init() throws IOException {
@@ -86,6 +90,24 @@ public class FileUploadControllerTest {
         File storedImage = new File(imagePath);
 
         assertThat(storedImage.exists()).isTrue();
+    }
+
+    @Test
+    public void uploadFile_withImageFromAuthorizedUser_fileAttachmentSavedToDatabase() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        uploadFile(getRequestEntity(), FileAttachment.class);
+        assertThat(fileAttachmentRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    public void uploadFile_withImageFromAuthorizedUser_fileAttachmentStoredWithFileType() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        uploadFile(getRequestEntity(), FileAttachment.class);
+        FileAttachment storedFile = fileAttachmentRepository.findAll().get(0);
+        assertThat(storedFile.getFileType()).isEqualTo("image/png");
+
     }
 
     public <T> ResponseEntity<T> uploadFile(HttpEntity<?> requestEntity, Class<T> responseType){

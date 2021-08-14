@@ -20,11 +20,13 @@ public class FileService {
 
     AppConfiguration appConfiguration;
     Tika tika;
+    FileAttachmentRepository fileAttachmentRepository;
 
     @Autowired
-    public FileService(AppConfiguration appConfiguration) {
+    public FileService(AppConfiguration appConfiguration, FileAttachmentRepository fileAttachmentRepository) {
         this.appConfiguration = appConfiguration;
         this.tika = new Tika();
+        this.fileAttachmentRepository = fileAttachmentRepository;
     }
 
     public String saveProfileImage(String base64Image) throws IOException {
@@ -61,11 +63,12 @@ public class FileService {
         try {
             byte[] fileAsByte = file.getBytes();
             FileUtils.writeByteArrayToFile(target, fileAsByte);
+            fileAttachment.setFileType(detectType(fileAsByte));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return fileAttachment;
+        return fileAttachmentRepository.save(fileAttachment);
     }
 
     private String getRandomName() {
