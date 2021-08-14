@@ -1,5 +1,6 @@
 package com.funnyshare.funnyshare.file;
 
+import com.funnyshare.funnyshare.post.Post;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -19,4 +20,7 @@ public class FileAttachment {
     private String name;
 
     private String fileType;
+
+    @OneToOne
+    private Post post;
 }

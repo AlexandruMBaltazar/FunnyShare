@@ -1,6 +1,10 @@
 package com.funnyshare.funnyshare;
 
+import com.funnyshare.funnyshare.configuration.AppConfiguration;
 import com.funnyshare.funnyshare.error.ApiError;
+import com.funnyshare.funnyshare.file.FileAttachment;
+import com.funnyshare.funnyshare.file.FileAttachmentRepository;
+import com.funnyshare.funnyshare.file.FileService;
 import com.funnyshare.funnyshare.post.Post;
 import com.funnyshare.funnyshare.post.PostRepository;
 import com.funnyshare.funnyshare.post.PostService;
@@ -8,23 +12,31 @@ import com.funnyshare.funnyshare.post.vm.PostVM;
 import com.funnyshare.funnyshare.user.User;
 import com.funnyshare.funnyshare.user.UserRepository;
 import com.funnyshare.funnyshare.user.UserService;
+import org.apache.commons.io.FileUtils;
+import org.hibernate.internal.build.AllowSysOut;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.transaction.TestTransaction;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.transaction.Transactional;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -55,14 +67,25 @@ public class PostControllerTest {
     @Autowired
     PostService postService;
 
+    @Autowired
+    FileAttachmentRepository fileAttachmentRepository;
+
+    @Autowired
+    FileService fileService;
+
+    @Autowired
+    AppConfiguration appConfiguration;
+
     @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
-    public void cleanup() {
+    public void cleanup() throws IOException {
+        fileAttachmentRepository.deleteAll();
         postRepository.deleteAll();
         userRepository.deleteAll();
         testRestTemplate.getRestTemplate().getInterceptors().clear();
+        FileUtils.cleanDirectory(new File(appConfiguration.getFullAttachmentsPath()));
     }
 
     @Test
@@ -460,6 +483,39 @@ public class PostControllerTest {
         assertThat(response.getBody().get("count")).isEqualTo(1);
     }
 
+    @Test
+    public void postPost_whenPostHasFileAttachmentAndUserIsAuthorized_fileAttachmentPostRelationIsUpdatedInDatabase() throws IOException {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+
+        MultipartFile file = createFile();
+
+        FileAttachment savedFile = fileService.saveAttachment(file);
+
+        Post post = TestUtil.createValidPost();
+        post.setAttachment(savedFile);
+        ResponseEntity<PostVM> response = postPost(post, PostVM.class);
+
+        FileAttachment inDB = fileAttachmentRepository.findAll().get(0);
+        assertThat(inDB.getPost().getId()).isEqualTo(response.getBody().getId());
+    }
+
+    @Test
+    public void postPost_whenPostHasFileAttachmentAndUserIsAuthorized_receivePostVMWithAttachment() throws IOException {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+
+        MultipartFile file = createFile();
+
+        FileAttachment savedFile = fileService.saveAttachment(file);
+
+        Post post = TestUtil.createValidPost();
+        post.setAttachment(savedFile);
+        ResponseEntity<PostVM> response = postPost(post, PostVM.class);
+
+        assertThat(response.getBody().getAttachment().getName()).isEqualTo(savedFile.getName());
+    }
+
     public <T> ResponseEntity<T> getNewPostCountOfUser(long hoaxId, String username, ParameterizedTypeReference<T> responseType){
         String path = "/api/1.0/users/" + username + "/posts/" + hoaxId +"?direction=after&count=true";
         return testRestTemplate.exchange(path, HttpMethod.GET, null, responseType);
@@ -506,6 +562,20 @@ public class PostControllerTest {
 
     public void authenticate(String username) {
         testRestTemplate.getRestTemplate().getInterceptors().add(new BasicAuthenticationInterceptor(username, "P4ssword"));
+    }
+
+    private MultipartFile createFile() throws IOException {
+        ClassPathResource imageResource = new ClassPathResource("profile.png");
+        byte[] fileAsByte = FileUtils.readFileToByteArray(imageResource.getFile());
+
+        MultipartFile file = new MockMultipartFile("profile.png", fileAsByte);
+        return file;
+    }
+
+    @AfterEach
+    public void cleanupAfter() {
+        fileAttachmentRepository.deleteAll();
+        postRepository.deleteAll();
     }
 
 }

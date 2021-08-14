@@ -1,6 +1,7 @@
 package com.funnyshare.funnyshare.post;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.funnyshare.funnyshare.file.FileAttachment;
 import com.funnyshare.funnyshare.user.User;
 import lombok.Data;
 
@@ -27,4 +28,7 @@ public class Post {
 
     @ManyToOne
     private User user;
+
+    @OneToOne(mappedBy = "post")
+    private FileAttachment attachment;
 }

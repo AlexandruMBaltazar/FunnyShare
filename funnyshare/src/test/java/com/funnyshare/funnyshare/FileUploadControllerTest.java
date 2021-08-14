@@ -44,6 +44,7 @@ public class FileUploadControllerTest {
 
     @BeforeEach
     public void init() throws IOException {
+        fileAttachmentRepository.deleteAll();
         userRepository.deleteAll();
         testRestTemplate.getRestTemplate().getInterceptors().clear();
         FileUtils.cleanDirectory(new File(appConfiguration.getFullAttachmentsPath()));

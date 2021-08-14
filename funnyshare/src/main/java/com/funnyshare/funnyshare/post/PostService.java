@@ -1,5 +1,7 @@
 package com.funnyshare.funnyshare.post;
 
+import com.funnyshare.funnyshare.file.FileAttachment;
+import com.funnyshare.funnyshare.file.FileAttachmentRepository;
 import com.funnyshare.funnyshare.user.User;
 import com.funnyshare.funnyshare.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -22,16 +25,25 @@ public class PostService {
 
     private PostRepository postRepository;
     private UserService userService;
+    private FileAttachmentRepository fileAttachmentRepository;
 
     @Autowired
-    public PostService(PostRepository postRepository, UserService userService) {
+    public PostService(PostRepository postRepository, UserService userService, FileAttachmentRepository fileAttachmentRepository) {
         this.postRepository = postRepository;
         this.userService = userService;
+        this.fileAttachmentRepository = fileAttachmentRepository;
     }
 
     public Post save(User user, Post post) {
         post.setUser(user);
         post.setTimestamp(new Date());
+
+        if(post.getAttachment() != null) {
+            FileAttachment fileAttachment = fileAttachmentRepository.getOne(post.getAttachment().getId());
+            post.setAttachment(fileAttachment);
+            fileAttachment.setPost(post);
+        }
+
         return postRepository.save(post);
     }
 
