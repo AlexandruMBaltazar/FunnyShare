@@ -45,7 +45,6 @@ public class FileUploadControllerTest {
         FileUtils.cleanDirectory(new File(appConfiguration.getFullAttachmentsPath()));
     }
 
-
     @Test
     public void uploadFile_withImageFromAuthorizedUser_receiveOk() {
         userService.save(TestUtil.createValidUser("user1"));

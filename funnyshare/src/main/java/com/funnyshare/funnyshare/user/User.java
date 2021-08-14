@@ -41,7 +41,7 @@ public class User implements UserDetails {
 
     private String image;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(cascade = CascadeType.REFRESH, mappedBy = "user", orphanRemoval = true)
     private List<Post> posts;
 
     @Override
