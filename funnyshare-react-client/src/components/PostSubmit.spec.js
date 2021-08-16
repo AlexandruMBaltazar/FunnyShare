@@ -60,6 +60,13 @@ describe("PostSubmit", () => {
   });
 
   describe("Interactions", () => {
+    let textArea;
+    const setupFocused = () => {
+      const rendered = setup();
+      textArea = rendered.container.querySelector("textarea");
+      fireEvent.focus(textArea);
+      return rendered;
+    };
     it("displays 3 rows when focused to textarea", () => {
       const { container } = setup();
       const textArea = container.querySelector("textarea");
@@ -331,6 +338,72 @@ describe("PostSubmit", () => {
       expect(
         queryByText("It must have minimum 10 and maximum 5000 characters")
       ).not.toBeInTheDocument();
+    });
+
+    it("displays file attachment input when text area focused", () => {
+      const { container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+
+      const uploadInput = container.querySelector("input");
+      expect(uploadInput.type).toBe("file");
+    });
+
+    it("displays image component when file selected", async () => {
+      apiCalls.postPostFile = jest.fn().mockResolvedValue({
+        data: {
+          id: 1,
+          name: "random-name.png",
+        },
+      });
+      const { container } = setup();
+      const textArea = container.querySelector("textarea");
+      fireEvent.focus(textArea);
+
+      const uploadInput = container.querySelector("input");
+      expect(uploadInput.type).toBe("file");
+
+      const file = new File(["dummy content"], "example.png", {
+        type: "image/png",
+      });
+      fireEvent.change(uploadInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        const attachmentImage = images[1];
+        expect(attachmentImage.src).toContain("data:image/png;base64");
+      });
+    });
+
+    it("removes selected image after clicking cancel", async () => {
+      apiCalls.postPostFile = jest.fn().mockResolvedValue({
+        data: {
+          id: 1,
+          name: "random-name.png",
+        },
+      });
+      const { queryByText, container } = setupFocused();
+
+      const uploadInput = container.querySelector("input");
+      expect(uploadInput.type).toBe("file");
+
+      const file = new File(["dummy content"], "example.png", {
+        type: "image/png",
+      });
+      fireEvent.change(uploadInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        expect(images.length).toBe(2);
+      });
+
+      fireEvent.click(queryByText("Cancel"));
+      fireEvent.focus(textArea);
+
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        expect(images.length).toBe(1);
+      });
     });
   });
 });

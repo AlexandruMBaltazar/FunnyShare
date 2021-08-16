@@ -3,6 +3,7 @@ import ProfileImageWithDefault from "./ProfileImageWithDefault";
 import { connect } from "react-redux";
 import * as apiCalls from "../api/apiCalls";
 import ButtonWithProgress from "./ButtonWithProgress";
+import Input from "./Input";
 
 class PostSubmit extends Component {
   state = {
@@ -10,6 +11,8 @@ class PostSubmit extends Component {
     content: undefined,
     pendingApiCall: false,
     errors: {},
+    file: undefined,
+    image: undefined,
   };
 
   onChangeContent = (event) => {
@@ -17,12 +20,37 @@ class PostSubmit extends Component {
     this.setState({ content: value, errors: {} });
   };
 
+  onFileSelect = (event) => {
+    if (event.target.files.length === 0) {
+      return;
+    }
+
+    const file = event.target.files[0];
+
+    let reader = new FileReader();
+
+    reader.onloadend = () => {
+      this.setState({
+        image: reader.result,
+        file,
+      });
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   onFocus = () => {
     this.setState({ focused: true });
   };
 
   onClickCancel = () => {
-    this.setState({ focused: false, content: "", errors: {} });
+    this.setState({
+      focused: false,
+      content: "",
+      errors: {},
+      file: undefined,
+      image: undefined,
+    });
   };
 
   onClickPost = () => {
@@ -81,23 +109,37 @@ class PostSubmit extends Component {
           )}
 
           {this.state.focused && (
-            <div className="float-end mt-1">
-              <ButtonWithProgress
-                className="btn btn-success px-4"
-                onClick={this.onClickPost}
-                disabled={this.state.pendingApiCall}
-                pendingApiCall={this.state.pendingApiCall}
-                text="Post"
-              />
+            <div>
+              <div className="pt-1">
+                <Input type="file" onChange={this.onFileSelect} />
+                {this.state.image && (
+                  <img
+                    className="mt-1 img-thumbnail"
+                    src={this.state.image}
+                    alt="upload"
+                    width="128"
+                    height="64"
+                  />
+                )}
+              </div>
+              <div className="float-end mt-1">
+                <ButtonWithProgress
+                  className="btn btn-success px-4"
+                  onClick={this.onClickPost}
+                  disabled={this.state.pendingApiCall}
+                  pendingApiCall={this.state.pendingApiCall}
+                  text="Post"
+                />
 
-              <button
-                className="btn btn-light ms-1"
-                onClick={this.onClickCancel}
-                disabled={this.state.pendingApiCall}
-              >
-                <i className="fas fa-times"></i>
-                Cancel
-              </button>
+                <button
+                  className="btn btn-light ms-1"
+                  onClick={this.onClickCancel}
+                  disabled={this.state.pendingApiCall}
+                >
+                  <i className="fas fa-times"></i>
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>
