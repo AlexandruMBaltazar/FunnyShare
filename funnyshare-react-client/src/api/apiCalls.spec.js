@@ -160,4 +160,16 @@ describe("apiCalls", () => {
       );
     });
   });
+
+  describe("postPostFile", () => {
+    it("calls /api/1.0/posts/upload", () => {
+      const mockPostPostFile = jest.fn();
+      axios.post = mockPostPostFile;
+
+      apiCalls.postPostFile();
+
+      const path = mockPostPostFile.mock.calls[0][0];
+      expect(path).toBe("/api/1.0/posts/upload");
+    });
+  });
 });

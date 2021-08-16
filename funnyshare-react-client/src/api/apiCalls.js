@@ -69,3 +69,7 @@ export const loadNewPostsCount = (postId, username) => {
   const path = `${basePath}/${postId}?direction=after&count=true`;
   return axios.get(path);
 };
+
+export const postPostFile = (file) => {
+  return axios.post("/api/1.0/posts/upload", file);
+};
