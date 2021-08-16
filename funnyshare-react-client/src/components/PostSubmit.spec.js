@@ -405,6 +405,144 @@ describe("PostSubmit", () => {
         expect(images.length).toBe(1);
       });
     });
+
+    it("calls postPostFile when file selected", async () => {
+      apiCalls.postPostFile = jest.fn().mockResolvedValue({
+        data: {
+          id: 1,
+          name: "random-name.png",
+        },
+      });
+
+      const { container } = setupFocused();
+
+      const uploadInput = container.querySelector("input");
+      expect(uploadInput.type).toBe("file");
+
+      const file = new File(["dummy content"], "example.png", {
+        type: "image/png",
+      });
+      fireEvent.change(uploadInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        expect(images.length).toBe(2);
+      });
+      expect(apiCalls.postPostFile).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls postPostFile with selected file", async () => {
+      apiCalls.postPostFile = jest.fn().mockResolvedValue({
+        data: {
+          id: 1,
+          name: "random-name.png",
+        },
+      });
+
+      const { container } = setupFocused();
+
+      const uploadInput = container.querySelector("input");
+      expect(uploadInput.type).toBe("file");
+
+      const file = new File(["dummy content"], "example.png", {
+        type: "image/png",
+      });
+      fireEvent.change(uploadInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        expect(images.length).toBe(2);
+      });
+
+      const body = apiCalls.postPostFile.mock.calls[0][0];
+
+      const readFile = () => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onloadend = () => {
+            resolve(reader.result);
+          };
+          reader.readAsText(body.get("file"));
+        });
+      };
+
+      const result = await readFile();
+
+      expect(result).toBe("dummy content");
+    });
+
+    it("calls postPost with post with file attachment object when clicking Post", async () => {
+      apiCalls.postPostFile = jest.fn().mockResolvedValue({
+        data: {
+          id: 1,
+          name: "random-name.png",
+        },
+      });
+      const { queryByText, container } = setupFocused();
+      fireEvent.change(textArea, { target: { value: "Test post content" } });
+
+      const uploadInput = container.querySelector("input");
+      expect(uploadInput.type).toBe("file");
+
+      const file = new File(["dummy content"], "example.png", {
+        type: "image/png",
+      });
+      fireEvent.change(uploadInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        expect(images.length).toBe(2);
+      });
+
+      const postButton = queryByText("Post");
+
+      apiCalls.postPost = jest.fn().mockResolvedValue({});
+      fireEvent.click(postButton);
+
+      expect(apiCalls.postPost).toHaveBeenCalledWith({
+        content: "Test post content",
+        attachment: {
+          id: 1,
+          name: "random-name.png",
+        },
+      });
+    });
+
+    it("clears image after postPost success", async () => {
+      apiCalls.postPostFile = jest.fn().mockResolvedValue({
+        data: {
+          id: 1,
+          name: "random-name.png",
+        },
+      });
+      const { queryByText, container } = setupFocused();
+      fireEvent.change(textArea, { target: { value: "Test post content" } });
+
+      const uploadInput = container.querySelector("input");
+      expect(uploadInput.type).toBe("file");
+
+      const file = new File(["dummy content"], "example.png", {
+        type: "image/png",
+      });
+      fireEvent.change(uploadInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        expect(images.length).toBe(2);
+      });
+
+      const postButton = queryByText("Post");
+
+      apiCalls.postPost = jest.fn().mockResolvedValue({});
+      fireEvent.click(postButton);
+
+      fireEvent.focus(textArea);
+      await waitFor(() => {
+        const images = container.querySelectorAll("img");
+        expect(images.length).toBe(1);
+      });
+    });
   });
 });
 

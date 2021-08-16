@@ -13,6 +13,7 @@ class PostSubmit extends Component {
     errors: {},
     file: undefined,
     image: undefined,
+    attachment: undefined,
   };
 
   onChangeContent = (event) => {
@@ -30,32 +31,48 @@ class PostSubmit extends Component {
     let reader = new FileReader();
 
     reader.onloadend = () => {
-      this.setState({
-        image: reader.result,
-        file,
-      });
+      this.setState(
+        {
+          image: reader.result,
+          file,
+        },
+        () => {
+          this.uploadFile();
+        }
+      );
     };
 
     reader.readAsDataURL(file);
+  };
+
+  uploadFile = () => {
+    const body = new FormData();
+    body.append("file", this.state.file);
+    apiCalls.postPostFile(body).then((response) => {
+      this.setState({ attachment: response.data });
+    });
   };
 
   onFocus = () => {
     this.setState({ focused: true });
   };
 
-  onClickCancel = () => {
+  resetState = () => {
     this.setState({
+      pendingApiCall: false,
       focused: false,
       content: "",
       errors: {},
-      file: undefined,
       image: undefined,
+      file: undefined,
+      attachment: undefined,
     });
   };
 
   onClickPost = () => {
     const body = {
       content: this.state.content,
+      attachment: this.state.attachment,
     };
 
     this.setState({ pendingApiCall: true });
@@ -63,11 +80,7 @@ class PostSubmit extends Component {
     apiCalls
       .postPost(body)
       .then((response) => {
-        this.setState({
-          focused: false,
-          content: "",
-          pendingApiCall: false,
-        });
+        this.resetState();
       })
       .catch((error) => {
         let errors = {};
@@ -133,7 +146,7 @@ class PostSubmit extends Component {
 
                 <button
                   className="btn btn-light ms-1"
-                  onClick={this.onClickCancel}
+                  onClick={this.resetState}
                   disabled={this.state.pendingApiCall}
                 >
                   <i className="fas fa-times"></i>
