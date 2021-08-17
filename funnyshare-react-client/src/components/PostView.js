@@ -9,6 +9,8 @@ class PostView extends Component {
     const { user, date } = post;
     const { username, displayName, image } = user;
     const relativeDate = format(date);
+    const attachmentImageVisible =
+      post.attachment && post.attachment.fileType.startsWith("image");
 
     return (
       <div className="card p-1">
@@ -30,6 +32,15 @@ class PostView extends Component {
           </div>
         </div>
         <div className="ps-5">{post.content}</div>
+        {attachmentImageVisible && (
+          <div className="ps-5">
+            <img
+              className="img-fluid"
+              src={`/images/attachments/${post.attachment.name}`}
+              alt="attachment"
+            />
+          </div>
+        )}
       </div>
     );
   }
