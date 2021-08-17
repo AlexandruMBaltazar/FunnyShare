@@ -9,6 +9,7 @@ import com.funnyshare.funnyshare.post.Post;
 import com.funnyshare.funnyshare.post.PostRepository;
 import com.funnyshare.funnyshare.post.PostService;
 import com.funnyshare.funnyshare.post.vm.PostVM;
+import com.funnyshare.funnyshare.shared.GenericResponse;
 import com.funnyshare.funnyshare.user.User;
 import com.funnyshare.funnyshare.user.UserRepository;
 import com.funnyshare.funnyshare.user.UserService;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -514,6 +516,50 @@ public class PostControllerTest {
         ResponseEntity<PostVM> response = postPost(post, PostVM.class);
 
         assertThat(response.getBody().getAttachment().getName()).isEqualTo(savedFile.getName());
+    }
+
+    @Test
+    public void deletePost_whenUserIsAuthorized_receiveOk() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<Object> response = deletePost(post.getId(), Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    }
+
+    @Test
+    public void deletePost_whenUserIsAuthorized_receiveGenericResponse() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = postService.save(user, TestUtil.createValidPost());
+
+        ResponseEntity<GenericResponse> response = deletePost(post.getId(), GenericResponse.class);
+        assertThat(response.getBody().getMessage()).isNotNull();
+
+    }
+
+    @Test
+    public void deletePost_whenUserIsAuthorized_hoaxRemovedFromDatabase() {
+        User user = userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        Post post = postService.save(user, TestUtil.createValidPost());
+
+        deletePost(post.getId(), Object.class);
+        Optional<Post> inDB = postRepository.findById(post.getId());
+        assertThat(inDB.isPresent()).isFalse();
+
+    }
+
+    @Test
+    public void deletePost_whenUserIsUnAuthorized_receiveUnauthorized() {
+        ResponseEntity<Object> response = deletePost(555, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    public <T> ResponseEntity<T> deletePost(long postId, Class<T> responseType){
+        return testRestTemplate.exchange(API_1_0_POSTS + "/" + postId, HttpMethod.DELETE, null, responseType);
     }
 
     public <T> ResponseEntity<T> getNewPostCountOfUser(long hoaxId, String username, ParameterizedTypeReference<T> responseType){

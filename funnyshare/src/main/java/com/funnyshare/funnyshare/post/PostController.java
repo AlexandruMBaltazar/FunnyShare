@@ -2,6 +2,7 @@ package com.funnyshare.funnyshare.post;
 
 import com.funnyshare.funnyshare.post.vm.PostVM;
 import com.funnyshare.funnyshare.shared.CurrentUser;
+import com.funnyshare.funnyshare.shared.GenericResponse;
 import com.funnyshare.funnyshare.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -62,5 +63,11 @@ public class PostController {
                 .map(PostVM::new).collect(Collectors.toList());
 
         return ResponseEntity.ok(newPosts);
+    }
+
+    @DeleteMapping("/posts/{id:[0-9]+}")
+    public GenericResponse deletePost(@PathVariable long id) {
+        postService.deletePost(id);
+        return new GenericResponse("Post is removed");
     }
 }

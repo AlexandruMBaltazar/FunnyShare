@@ -89,6 +89,10 @@ public class PostService {
         return postRepository.count(spec);
     }
 
+    public void deletePost(long id) {
+        postRepository.deleteById(id);
+    }
+
     private Specification<Post> userIs(User user) {
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("user"), user);
     }
@@ -100,5 +104,4 @@ public class PostService {
     private Specification<Post> idGreaterThan(long id) {
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.greaterThan(root.get("id"), id);
     }
-
 }
