@@ -570,7 +570,28 @@ public class PostControllerTest {
         authenticate("user1");
         ResponseEntity<Object> response = deletePost(5555, Object.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
 
+    @Test
+    public void deleteHoax_whenHoaxHasAttachment_attachmentRemovedFromDatabase() throws IOException {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+
+        MultipartFile file = createFile();
+        FileAttachment fileAttachment = fileService.saveAttachment(file);
+
+        Post post = TestUtil.createValidPost();
+        post.setAttachment(fileAttachment);
+
+        ResponseEntity<PostVM> response = postPost(post, PostVM.class);
+
+        long postId = response.getBody().getId();
+
+        deletePost(postId, Object.class);
+
+        Optional<FileAttachment> optionalAttachment = fileAttachmentRepository.findById(fileAttachment.getId());
+
+        assertThat(optionalAttachment.isPresent()).isFalse();
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.funnyshare.funnyshare.post;
 
 import com.funnyshare.funnyshare.file.FileAttachment;
 import com.funnyshare.funnyshare.file.FileAttachmentRepository;
+import com.funnyshare.funnyshare.file.FileService;
 import com.funnyshare.funnyshare.user.User;
 import com.funnyshare.funnyshare.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +27,15 @@ public class PostService {
     private PostRepository postRepository;
     private UserService userService;
     private FileAttachmentRepository fileAttachmentRepository;
+    private FileService fileService;
 
     @Autowired
-    public PostService(PostRepository postRepository, UserService userService, FileAttachmentRepository fileAttachmentRepository) {
+    public PostService(PostRepository postRepository, UserService userService, FileAttachmentRepository fileAttachmentRepository,
+                       FileService fileService) {
         this.postRepository = postRepository;
         this.userService = userService;
         this.fileAttachmentRepository = fileAttachmentRepository;
+        this.fileService = fileService;
     }
 
     public Post save(User user, Post post) {
@@ -90,6 +94,12 @@ public class PostService {
     }
 
     public void deletePost(long id) {
+        Post post = postRepository.getOne(id);
+
+        if(post.getAttachment() != null) {
+            fileService.deleteAttachmentImage(post.getAttachment().getName());
+        }
+
         postRepository.deleteById(id);
     }
 

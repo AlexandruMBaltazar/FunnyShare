@@ -29,6 +29,6 @@ public class Post {
     @ManyToOne
     private User user;
 
-    @OneToOne(mappedBy = "post")
+    @OneToOne(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private FileAttachment attachment;
 }
