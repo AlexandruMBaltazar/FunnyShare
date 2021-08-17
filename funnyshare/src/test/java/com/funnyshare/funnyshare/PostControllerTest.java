@@ -553,6 +553,27 @@ public class PostControllerTest {
     }
 
     @Test
+    public void deletePost_whenPostIsOwnedByAnotherUser_receiveForbidden() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        User postOwner = userService.save(TestUtil.createValidUser("post-owner"));
+        Post post = postService.save(postOwner, TestUtil.createValidPost());
+
+        ResponseEntity<Object> response = deletePost(post.getId(), Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+    }
+
+    @Test
+    public void deletePost_whenPostNotExist_receiveForbidden() {
+        userService.save(TestUtil.createValidUser("user1"));
+        authenticate("user1");
+        ResponseEntity<Object> response = deletePost(5555, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+    }
+
+    @Test
     public void deletePost_whenUserIsUnAuthorized_receiveUnauthorized() {
         ResponseEntity<Object> response = deletePost(555, Object.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,6 +67,7 @@ public class PostController {
     }
 
     @DeleteMapping("/posts/{id:[0-9]+}")
+    @PreAuthorize("@postSecurityService.isAllowedToDelete(#id, principal)")
     public GenericResponse deletePost(@PathVariable long id) {
         postService.deletePost(id);
         return new GenericResponse("Post is removed");
