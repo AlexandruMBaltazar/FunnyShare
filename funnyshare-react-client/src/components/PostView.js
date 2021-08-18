@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ProfileImageWithDefault from "./ProfileImageWithDefault";
 import { format } from "timeago.js";
 import { Link } from "react-router-dom";
+import { connect } from "react-redux";
 
 class PostView extends Component {
   render() {
@@ -11,6 +12,8 @@ class PostView extends Component {
     const relativeDate = format(date);
     const attachmentImageVisible =
       post.attachment && post.attachment.fileType.startsWith("image");
+
+    const ownedByLoggedInUser = this.props.loggedInUser.id === user.id;
 
     return (
       <div className="card p-1">
@@ -30,6 +33,11 @@ class PostView extends Component {
             <span className="text-black-50"> - </span>
             <span className="text-black-50">{relativeDate}</span>
           </div>
+          {ownedByLoggedInUser && (
+            <button className="btn btn-outline-danger btn-sm">
+              <i className="far fa-trash-alt" />
+            </button>
+          )}
         </div>
         <div className="ps-5">{post.content}</div>
         {attachmentImageVisible && (
@@ -46,4 +54,10 @@ class PostView extends Component {
   }
 }
 
-export default PostView;
+const mapStateToProps = (state) => {
+  return {
+    loggedInUser: state,
+  };
+};
+
+export default connect(mapStateToProps)(PostView);

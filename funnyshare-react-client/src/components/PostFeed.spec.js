@@ -8,6 +8,18 @@ import {
 import PostFeed from "./PostFeed";
 import * as apiCalls from "../api/apiCalls";
 import { MemoryRouter } from "react-router";
+import { Provider } from "react-redux";
+import { createStore } from "redux";
+import authReducer from "../redux /authReducer";
+
+const loggedInStateUser1 = {
+  id: 1,
+  username: "user1",
+  displayName: "display1",
+  image: "profile1.png",
+  password: "P4assword",
+  isLoggedIn: true,
+};
 
 const originalSetInterval = window.setInterval;
 const originalClearInterval = window.clearInterval;
@@ -37,11 +49,14 @@ const runTimer = () => {
   timedFunction && timedFunction();
 };
 
-const setup = (props) => {
+const setup = (props, state = loggedInStateUser1) => {
+  const store = createStore(authReducer, state);
   return render(
-    <MemoryRouter>
-      <PostFeed {...props} />
-    </MemoryRouter>
+    <Provider store={store}>
+      <MemoryRouter>
+        <PostFeed {...props} />
+      </MemoryRouter>
+    </Provider>
   );
 };
 

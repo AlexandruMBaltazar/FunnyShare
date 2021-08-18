@@ -2,6 +2,18 @@ import React from "react";
 import { render } from "@testing-library/react";
 import PostView from "./PostView";
 import { MemoryRouter } from "react-router";
+import { Provider } from "react-redux";
+import { createStore } from "redux";
+import authReducer from "../redux /authReducer";
+
+const loggedInStateUser1 = {
+  id: 1,
+  username: "user1",
+  displayName: "display1",
+  image: "profile1.png",
+  password: "P4assword",
+  isLoggedIn: true,
+};
 
 const postWithoutAttachment = {
   id: 10,
@@ -44,16 +56,19 @@ const postWithPdfAttachment = {
   },
 };
 
-const setup = (post = postWithoutAttachment) => {
+const setup = (post = postWithoutAttachment, state = loggedInStateUser1) => {
+  const store = createStore(authReducer, state);
   const oneMinute = 60 * 1000;
   const date = new Date(new Date() - oneMinute);
 
   post.date = date;
 
   return render(
-    <MemoryRouter>
-      <PostView post={post} />
-    </MemoryRouter>
+    <Provider store={store}>
+      <MemoryRouter>
+        <PostView post={post} />
+      </MemoryRouter>
+    </Provider>
   );
 };
 
