@@ -13,6 +13,7 @@ class PostFeed extends Component {
     newPostCount: 0,
     isLoadingOldPosts: false,
     isLoadingNewPosts: false,
+    isDeletingPost: false,
   };
 
   componentDidMount() {
@@ -91,6 +92,22 @@ class PostFeed extends Component {
     this.setState({ postToBeDeleted: undefined });
   };
 
+  onClickModalOk = () => {
+    this.setState({ isDeletingPost: true });
+    apiCalls.deletePost(this.state.postToBeDeleted.id).then((response) => {
+      const page = { ...this.state.page };
+      page.content = page.content.filter(
+        (post) => post.id !== this.state.postToBeDeleted.id
+      );
+
+      this.setState({
+        postToBeDeleted: undefined,
+        page,
+        isDeletingPost: false,
+      });
+    });
+  };
+
   render() {
     if (this.state.isLoadingPosts) {
       return <Spinner />;
@@ -149,6 +166,8 @@ class PostFeed extends Component {
           }
           title="Delete Post!"
           okButton="Delete"
+          onClickOk={this.onClickModalOk}
+          pendingApiCall={this.state.isDeletingPost}
         />
       </div>
     );
