@@ -73,3 +73,7 @@ export const loadNewPostsCount = (postId, username) => {
 export const postPostFile = (file) => {
   return axios.post("/api/1.0/posts/upload", file);
 };
+
+export const deletePost = (postId) => {
+  return axios.delete(`/api/1.0/posts/${postId}`);
+};
