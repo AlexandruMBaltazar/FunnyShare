@@ -83,6 +83,14 @@ class PostFeed extends Component {
       });
   };
 
+  onClickDeletePost = (post) => {
+    this.setState({ postToBeDeleted: post });
+  };
+
+  onClickModalCancel = () => {
+    this.setState({ postToBeDeleted: undefined });
+  };
+
   render() {
     if (this.state.isLoadingPosts) {
       return <Spinner />;
@@ -113,7 +121,13 @@ class PostFeed extends Component {
           </div>
         )}
         {this.state.page.content.map((post) => {
-          return <PostView key={post.id} post={post} />;
+          return (
+            <PostView
+              key={post.id}
+              post={post}
+              onClickDelete={() => this.onClickDeletePost(post)}
+            />
+          );
         })}
         {this.state.page.last === false && (
           <div
@@ -126,7 +140,16 @@ class PostFeed extends Component {
             {this.state.isLoadingOldPosts ? <Spinner /> : "Load More"}
           </div>
         )}
-        <Modal visible={true} />
+        <Modal
+          visible={this.state.postToBeDeleted && true}
+          onClickCancel={this.onClickModalCancel}
+          body={
+            this.state.postToBeDeleted &&
+            `Are you sure to delete '${this.state.postToBeDeleted.content}'?`
+          }
+          title="Delete Post!"
+          okButton="Delete"
+        />
       </div>
     );
   }

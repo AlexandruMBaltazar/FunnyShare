@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 
 class PostView extends Component {
   render() {
-    const { post } = this.props;
+    const { post, onClickDelete } = this.props;
     const { user, date } = post;
     const { username, displayName, image } = user;
     const relativeDate = format(date);
@@ -34,7 +34,10 @@ class PostView extends Component {
             <span className="text-black-50">{relativeDate}</span>
           </div>
           {ownedByLoggedInUser && (
-            <button className="btn btn-outline-danger btn-sm">
+            <button
+              className="btn btn-outline-danger btn-sm"
+              onClick={onClickDelete}
+            >
               <i className="far fa-trash-alt" />
             </button>
           )}
