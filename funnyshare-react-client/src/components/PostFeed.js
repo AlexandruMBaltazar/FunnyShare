@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import * as apiCalls from "../api/apiCalls";
 import Spinner from "./Spinner";
 import PostView from "./PostView";
+import Modal from "./Modal";
 
 class PostFeed extends Component {
   state = {
@@ -125,6 +126,7 @@ class PostFeed extends Component {
             {this.state.isLoadingOldPosts ? <Spinner /> : "Load More"}
           </div>
         )}
+        <Modal visible={true} />
       </div>
     );
   }
