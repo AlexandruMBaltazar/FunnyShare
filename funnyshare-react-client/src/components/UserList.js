@@ -1,81 +1,80 @@
-import React, { Component } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import * as apiCalls from "../api/apiCalls";
 import UserListItem from "./UserListItem";
 
-class UserList extends Component {
-  state = {
-    page: {
-      content: [],
-      number: 0,
-      size: 3,
-    },
-  };
+const UserList = (props) => {
+  const [page, setPage] = useState({
+    content: [],
+    number: 0,
+    size: 3,
+  });
 
-  componentDidMount() {
-    this.loadData();
-  }
+  const [loadError, setLoadError] = useState();
 
-  loadData = (requestedPage = 0) => {
-    apiCalls
-      .listUsers({ page: requestedPage, size: this.state.page.size })
-      .then((response) => {
-        this.setState({
-          page: response.data,
-          loadError: undefined,
+  const loadData = useCallback(
+    (requestedPage = 0) => {
+      apiCalls
+        .listUsers({ page: requestedPage, size: page.size })
+        .then((response) => {
+          setPage(response.data);
+          setLoadError();
+        })
+        .catch((error) => {
+          setLoadError("User load failed");
         });
-      })
-      .catch((error) => {
-        this.setState({ loadError: "User load failed" });
-      });
+    },
+    [page.size]
+  );
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onClickNext = () => {
+    loadData(page.number + 1);
   };
 
-  onClickNext = () => {
-    this.loadData(this.state.page.number + 1);
+  const onClickPrevious = () => {
+    loadData(page.number - 1);
   };
 
-  onClickPrevious = () => {
-    this.loadData(this.state.page.number - 1);
-  };
+  const { content, first, last } = page;
 
-  render() {
-    return (
-      <div className="card">
-        <h3 className="card-title m-auto">Users</h3>
-        <div className="list-group list-group-flush" data-testid="usergroup">
-          {this.state.page.content.map((user) => {
-            return <UserListItem key={user.username} user={user} />;
-          })}
-        </div>
-        <div className="p-2">
-          {!this.state.page.first && (
-            <span
-              className="badge bg-light text-dark float-start"
-              style={{ cursor: "pointer" }}
-              onClick={this.onClickPrevious}
-            >
-              {" "}
-              Previous Page{" "}
-            </span>
-          )}
-          {!this.state.page.last && (
-            <span
-              className="badge bg-light text-dark float-end"
-              style={{ cursor: "pointer" }}
-              onClick={this.onClickNext}
-            >
-              {" "}
-              Next Page{" "}
-            </span>
-          )}
-        </div>
-        {this.state.loadError && (
-          <span className="text-danger text-center">
-            {this.state.loadError}
+  return (
+    <div className="card">
+      <h3 className="card-title m-auto">Users</h3>
+      <div className="list-group list-group-flush" data-testid="usergroup">
+        {content.map((user) => {
+          return <UserListItem key={user.username} user={user} />;
+        })}
+      </div>
+      <div className="p-2">
+        {!first && (
+          <span
+            className="badge bg-light text-dark float-start"
+            style={{ cursor: "pointer" }}
+            onClick={onClickPrevious}
+          >
+            {" "}
+            Previous Page{" "}
+          </span>
+        )}
+        {!last && (
+          <span
+            className="badge bg-light text-dark float-end"
+            style={{ cursor: "pointer" }}
+            onClick={onClickNext}
+          >
+            {" "}
+            Next Page{" "}
           </span>
         )}
       </div>
-    );
-  }
-}
+      {loadError && (
+        <span className="text-danger text-center">{loadError}</span>
+      )}
+    </div>
+  );
+};
 
 export default UserList;
