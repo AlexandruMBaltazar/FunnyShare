@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Input from "../components/Input";
 import ButtonWithProgress from "../components/ButtonWithProgress";
 import { connect } from "react-redux";
@@ -10,17 +10,9 @@ export const LoginPage = (props) => {
   const [apiError, setApiError] = useState();
   const [pendingApiCall, setPendingApiCall] = useState(false);
 
-  const onChangeUsername = (event) => {
-    const value = event.target.value;
-    setUsername(value);
+  useEffect(() => {
     setApiError();
-  };
-
-  const onChangePassword = (event) => {
-    const value = event.target.value;
-    setPassword(value);
-    setApiError();
-  };
+  }, [username, password]);
 
   const onClickLogin = () => {
     let user = {
@@ -56,7 +48,9 @@ export const LoginPage = (props) => {
           name="username"
           placeholder="Your username"
           value={username}
-          onChange={onChangeUsername}
+          onChange={(event) => {
+            setUsername(event.target.value);
+          }}
         />
       </div>
 
@@ -67,7 +61,9 @@ export const LoginPage = (props) => {
           name="password"
           placeholder="Your password"
           value={password}
-          onChange={onChangePassword}
+          onChange={(event) => {
+            setPassword(event.target.value);
+          }}
         />
       </div>
 
