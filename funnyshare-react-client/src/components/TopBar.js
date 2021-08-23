@@ -17,7 +17,7 @@ const TopBar = (props) => {
   };
 
   let links = (
-    <ul className="nav navbar-nav ml-auto">
+    <ul className="nav navbar-nav ms-auto">
       <li className="nav-item">
         <Link to="/signup" className="nav-link">
           Sign Up
